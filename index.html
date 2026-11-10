@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>우리 반 AI 작품관</title>
+<style>
+:root{--bg:#fff8ee;--card:#fff;--ink:#2b2b2b;--sub:#777;--line:#e6dccb}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,"Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink)}
+header{text-align:center;padding:36px 16px 12px}
+h1{font-size:clamp(28px,5vw,44px);margin:0}
+header p{color:var(--sub);font-size:18px;margin:8px 0 0}
+main{max-width:1000px;margin:0 auto;padding:20px 16px 48px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+a.card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:200px;padding:20px;border-radius:22px;background:var(--card);border:3px solid var(--line);color:var(--ink);text-decoration:none;box-shadow:0 6px 0 var(--line);transition:transform .12s,box-shadow .12s}
+a.card:hover,a.card:focus-visible{transform:translateY(-4px);box-shadow:0 10px 0 var(--c)}
+a.card:active{transform:translateY(3px);box-shadow:0 2px 0 var(--c)}
+.emo{font-size:72px;line-height:1;width:120px;height:120px;display:grid;place-items:center;border-radius:50%;background:var(--c)}
+.name{font-size:22px;font-weight:700;text-align:center;word-break:keep-all}
+</style></head>
+<body>
+<header><h1>우리 반 AI 작품관</h1><p>카드를 눌러 친구가 만든 프로그램에 들어가 보세요!</p></header>
+<main>
+  <a class="card" href="free-ai/" style="--c:#dbeafe"><span class="emo">💬</span><span class="name">free ai</span></a>
+  <a class="card" href="pizza/" style="--c:#ffe1d3"><span class="emo">🍕</span><span class="name">맛있는 피자 만들기</span></a>
+  <a class="card" href="nyonyo/" style="--c:#e9d5ff"><span class="emo">🌙</span><span class="name">뇨뇨 마을 rpg</span></a>
+  <a class="card" href="cleanup/" style="--c:#dcfce7"><span class="emo">🧹</span><span class="name">쉬는시간 재밌는 정리정돈 게임</span></a>
+  <a class="card" href="cherry-story/" style="--c:#fde2e4"><span class="emo">🍒</span><span class="name">체리의 이야기 게임</span></a>
+  <a class="card" href="chamchamcham/" style="--c:#fef3c7"><span class="emo">🔨</span><span class="name">뿅망치 참참참 게임</span></a>
+</main>
+</body></html>
