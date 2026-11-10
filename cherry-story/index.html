@@ -1,7 +1,645 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>체리의 이야기 게임</title>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,"Malgun Gothic",sans-serif;background:#fff8ee;color:#2b2b2b;text-align:center}
-a.home{position:fixed;top:12px;left:12px;padding:10px 16px;border-radius:12px;background:#fff;border:2px solid #e6dccb;color:#2b2b2b;text-decoration:none;font-size:18px}
-.e{font-size:80px}h1{font-size:32px;margin:8px}</style></head>
-<body><a class="home" href="../">← 처음으로</a><div><div class="e">🍒</div><h1>체리의 이야기 게임</h1><p style="font-size:20px">만드는 중이에요!</p></div></body></html>
+<style>
+:root{
+  --bg:#fff6f2; --card:#fff; --ink:#2b2b2b; --sub:#6f6f6f; --line:#f0c9cf;
+  --cherry:#e2384d; --cherry-d:#b8243a; --pink:#fde2e4; --leaf:#3a9a4a; --gold:#f5b301;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:system-ui,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:var(--bg);color:var(--ink);
+  -webkit-tap-highlight-color:transparent;word-break:keep-all;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+button:disabled{cursor:default;opacity:.4}
+
+/* 구석 버튼 */
+.corner{position:fixed;top:10px;z-index:30;padding:10px 16px;border-radius:14px;background:#fff;border:2px solid var(--line);
+  font-size:18px;text-decoration:none;color:var(--ink);box-shadow:0 3px 0 var(--line)}
+.corner:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.home-link{left:10px}
+.receipt-btn{right:10px}
+
+.screen{display:none;min-height:100vh;padding:68px 16px 24px}
+.screen.on{display:block}
+.wrap{max-width:1100px;margin:0 auto}
+
+/* ===== 게임판 (첫 화면) ===== */
+.board{border:3px solid var(--line);border-radius:44px 36px 48px 40px;background:#fff;padding:18px;
+  display:grid;grid-template-columns:150px 1fr 1.1fr;gap:18px;align-items:stretch;min-height:340px}
+.deco-btn{border:3px solid var(--cherry);background:var(--pink);border-radius:18px;font-size:22px;font-weight:700;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:14px 8px;line-height:1.3}
+.deco-btn .big{font-size:44px}
+.mascot-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative}
+.mascot-ring{width:min(240px,100%);aspect-ratio:1;border:3px dashed var(--line);border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle,#fff 55%,#fff0f2 100%);position:relative}
+.mascot-ring .tag{position:absolute;top:-14px;background:#fff;padding:0 10px;font-size:16px;color:var(--sub)}
+.mascot-ring > div{width:78%;height:78%}
+.mascot-ring svg{width:100%;height:100%}
+.bubble{position:relative;background:#fff;border:3px solid var(--cherry);border-radius:18px;padding:10px 14px;font-size:20px;
+  line-height:1.4;max-width:340px;min-height:52px;text-align:center}
+.bubble::before{content:"";position:absolute;left:50%;top:-12px;transform:translateX(-50%);border:10px solid transparent;
+  border-top:0;border-bottom:12px solid var(--cherry)}
+.right-col{display:flex;flex-direction:column;gap:12px}
+.level-box .lv-name{font-size:18px;font-weight:700;margin-bottom:6px}
+.lv-bar{height:26px;border:3px solid var(--ink);border-radius:14px;overflow:hidden;background:#fff}
+.lv-fill{height:100%;width:0;background:linear-gradient(90deg,#ff8fa0,var(--cherry));transition:width .8s ease}
+.lv-sub{font-size:15px;color:var(--sub);margin-top:4px}
+.q-box{flex:1;border:3px solid var(--ink);border-radius:16px;padding:14px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:8px;text-align:center;position:relative;min-height:200px}
+.q-box .lbl{position:absolute;top:8px;left:12px;font-size:16px;color:var(--sub)}
+.q-box .emo{font-size:60px;line-height:1}
+.q-box .ttl{font-size:24px;font-weight:700}
+.q-box .meta{font-size:16px;color:var(--sub)}
+.go{background:var(--cherry);color:#fff;border:0;border-radius:16px;padding:12px 26px;font-size:22px;font-weight:700;box-shadow:0 4px 0 var(--cherry-d)}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 var(--cherry-d)}
+
+.band{margin-top:30px;border:3px solid var(--line);border-radius:18px;background:#fff;padding:22px 16px 16px;position:relative;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.band .tab{position:absolute;top:-20px;left:50%;transform:translateX(-50%);background:#fff;border:3px solid var(--line);
+  border-radius:14px;padding:4px 22px;font-size:20px;font-weight:700}
+.slots{display:flex;gap:10px;border:3px solid var(--ink);border-radius:14px;padding:10px;flex-wrap:wrap}
+.slot{width:62px;height:84px;border-radius:50% 50% 46% 46%/58% 58% 42% 42%;border:3px solid var(--ink);background:#fff;
+  font-size:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:0}
+.slot small{font-size:12px;line-height:1.1}
+.slot.sel{border-color:var(--cherry);background:var(--pink);transform:translateY(-4px);box-shadow:0 4px 0 var(--cherry)}
+.slot.locked{color:#aaa;border-style:dashed}
+.slot .done{position:absolute;top:-8px;right:-8px;background:var(--leaf);color:#fff;border-radius:50%;width:24px;height:24px;
+  font-size:15px;display:grid;place-items:center}
+.flip{display:flex;align-items:center;gap:10px}
+.arrow{width:64px;height:64px;border:0;background:none;padding:0}
+.arrow svg{width:100%;height:100%}
+.flip .mid{border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-size:18px;font-weight:700}
+
+/* ===== 이야기 / 문제 ===== */
+.panel{max-width:820px;margin:0 auto;background:#fff;border:3px solid var(--line);border-radius:28px;padding:24px 22px;min-height:420px;
+  display:flex;flex-direction:column}
+.panel h2{margin:0 0 6px;font-size:24px;color:var(--cherry-d)}
+.page-no{font-size:16px;color:var(--sub)}
+.page-art{font-size:84px;text-align:center;margin:14px 0 6px;line-height:1.1}
+.page-text{font-size:30px;line-height:1.7;text-align:center;flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.choices{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.choice{border:3px solid var(--cherry);background:var(--pink);border-radius:18px;padding:14px 22px;font-size:24px;font-weight:700;min-width:220px}
+.choice:active{transform:translateY(2px)}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px;flex-wrap:wrap}
+.quiz-q{font-size:30px;text-align:center;margin:18px 0;line-height:1.5;font-weight:700}
+.opts{display:grid;gap:12px;max-width:520px;margin:0 auto;width:100%}
+.opt{border:3px solid var(--ink);background:#fff;border-radius:16px;padding:16px;font-size:26px;font-weight:700}
+.opt.right{background:#d9f7de;border-color:var(--leaf)}
+.opt.wrong{background:#ffe1e1;border-color:#d33;text-decoration:line-through}
+.side-mascot{position:fixed;right:12px;bottom:12px;display:flex;align-items:flex-end;gap:6px;z-index:20;pointer-events:none}
+.side-mascot[hidden]{display:none}
+.side-mascot > div:last-child{width:110px;height:130px}
+.side-mascot svg{width:100%;height:100%}
+.side-mascot .bubble{font-size:18px;max-width:260px}
+.side-mascot .bubble::before{left:auto;right:-12px;top:50%;transform:translateY(-50%);border:10px solid transparent;
+  border-right:0;border-left:12px solid var(--cherry)}
+.result{text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;flex:1}
+.result .big{font-size:30px;font-weight:700}
+.result .lv-bar{width:min(420px,90%)}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.ghost{background:#fff;border:3px solid var(--line);border-radius:16px;padding:12px 22px;font-size:20px;font-weight:700}
+
+/* ===== 옷장 ===== */
+.closet{display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:22px;max-width:980px;margin:0 auto;align-items:start}
+.closet .preview{background:#fff;border:3px solid var(--line);border-radius:28px;padding:16px;text-align:center}
+.closet .preview svg{width:100%;max-width:260px;height:auto}
+.closet h2{margin:0 0 10px;font-size:26px}
+.rack{background:#fff;border:3px solid var(--line);border-radius:22px;padding:14px 16px;margin-bottom:14px}
+.rack h3{margin:0 0 10px;font-size:20px}
+.items{display:flex;gap:10px;flex-wrap:wrap}
+.item{width:96px;min-height:96px;border:3px solid var(--line);border-radius:16px;background:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;font-size:15px;padding:6px}
+.item .ic{font-size:36px;line-height:1}
+.item .sw{width:38px;height:38px;border-radius:50%;border:2px solid #0002}
+.item.on{border-color:var(--cherry);background:var(--pink);box-shadow:0 3px 0 var(--cherry)}
+.item.lock{color:#999;background:#f6f6f6}
+
+/* ===== 창 · 효과 ===== */
+.modal{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal.on{display:flex}
+.modal .box{background:#fff;border-radius:22px;max-width:560px;width:100%;max-height:88vh;overflow:auto;padding:22px;position:relative}
+.modal h2{margin:0 0 12px;font-size:24px}
+.modal .x{position:absolute;top:10px;right:10px;border:0;background:#f2f2f2;border-radius:12px;width:44px;height:44px;font-size:22px}
+.rc-nums{display:grid;grid-template-columns:1fr auto;gap:8px 12px;font-size:19px;background:#fff8ee;border-radius:14px;padding:12px 14px}
+.rc-nums b{text-align:right}
+.modal h3{font-size:19px;margin:16px 0 6px}
+.modal ul{margin:0;padding-left:22px;font-size:18px;line-height:1.6}
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:16px;
+  font-size:20px;z-index:60;opacity:0;transition:opacity .3s;pointer-events:none;text-align:center;max-width:90vw}
+.toast.on{opacity:1}
+.confetti{position:fixed;top:-20px;width:12px;height:18px;z-index:70;pointer-events:none;animation:fall 2.4s linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.jump{animation:jump .6s ease}
+@keyframes jump{30%{transform:translateY(-22px)}60%{transform:translateY(0)}80%{transform:translateY(-8px)}}
+.tilt{animation:tilt .8s ease}
+@keyframes tilt{25%{transform:rotate(-12deg)}75%{transform:rotate(8deg)}}
+.spin{animation:spin .9s ease}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media (max-width:820px){
+  .board{grid-template-columns:1fr 1fr;border-radius:28px}
+  .mascot-zone{grid-column:1/-1;order:-1}
+  .deco-btn{flex-direction:row;font-size:20px}
+  .deco-btn .big{font-size:32px}
+  .closet{grid-template-columns:1fr}
+  .page-text{font-size:26px}
+  .side-mascot > div:last-child{width:80px;height:95px}
+  .side-mascot .bubble{font-size:16px;max-width:200px}
+}
+@media (max-width:520px){
+  .board{grid-template-columns:1fr}
+  .band{justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<a class="corner home-link" href="../">← 처음으로</a>
+<button class="corner receipt-btn" id="receiptBtn" type="button">🧾 만든 기록</button>
+
+<!-- ① 게임판 -->
+<section class="screen on" id="sHome">
+  <div class="wrap">
+    <div class="board">
+      <button class="deco-btn" id="toCloset" type="button"><span class="big">👗</span>캐릭터<br>꾸미기</button>
+      <div class="mascot-zone">
+        <div class="mascot-ring"><span class="tag">마스코트</span><div id="homeCherry"></div></div>
+        <div class="bubble" id="homeBubble"></div>
+      </div>
+      <div class="right-col">
+        <div class="level-box">
+          <div class="lv-name" id="lvName">레벨 1</div>
+          <div class="lv-bar"><div class="lv-fill" id="lvFill"></div></div>
+          <div class="lv-sub" id="lvSub"></div>
+        </div>
+        <div class="q-box" id="qBox"><span class="lbl">문제</span></div>
+      </div>
+    </div>
+    <div class="band">
+      <span class="tab">고르기</span>
+      <div class="slots" id="slots"></div>
+      <div class="flip">
+        <button class="arrow" id="homePrev" type="button" aria-label="앞 이야기"></button>
+        <span class="mid">넘기기</span>
+        <button class="arrow" id="homeNext" type="button" aria-label="다음 이야기"></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ② 이야기 읽기 -->
+<section class="screen" id="sStory">
+  <div class="panel" id="storyPanel"></div>
+</section>
+
+<!-- ③ 문제 -->
+<section class="screen" id="sQuiz">
+  <div class="panel" id="quizPanel"></div>
+</section>
+
+<!-- ④ 옷장 -->
+<section class="screen" id="sCloset">
+  <div class="closet">
+    <div class="preview">
+      <h2>체리의 옷장</h2>
+      <div id="closetCherry"></div>
+      <button class="go" id="closetBack" type="button" style="margin-top:10px">게임판으로</button>
+    </div>
+    <div id="racks"></div>
+  </div>
+</section>
+
+<!-- 이야기·문제 화면 구석 체리 -->
+<div class="side-mascot" id="side" hidden>
+  <div class="bubble" id="sideBubble"></div>
+  <div id="sideCherry"></div>
+</div>
+
+<!-- 만든 기록 창 -->
+<div class="modal" id="receipt" role="dialog" aria-modal="true" aria-labelledby="rcTitle">
+  <div class="box">
+    <button class="x" id="rcClose" type="button" aria-label="닫기">✕</button>
+    <h2 id="rcTitle">🧾 만든 기록</h2>
+    <div id="rcBody">불러오는 중…</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- 체리가 하는 말 (아이가 쓴 말, 띄어쓰기만 고침) ---------- */
+const LINES = {
+  hello: "와! 안녕! 난 체리야! 내가 너를 도와 줄게!",
+  good:  "우와! 진짜 잘한다! 내 체리가 하늘로 올라갈 것 같아!",
+  wrong: "어.........어? 틀렸어?..... 다시 해 봐.....",
+  stuck: "어, 친구야? 왜 가만히 있어? 나간 거야? 다시 들어와 줘!",
+  done:  "와! 끝났어! 레벨이 올라갈 것 같지 않아?"
+};
+
+/* ---------- 이야기 (1학년용으로 새로 지은 글) ---------- */
+const STORIES = [
+  { id:"cat", emo:"🐱", title:"도서관에 온 고양이",
+    pages:[
+      {art:"🏫🚪", text:"도서관 문이 열렸어요.<br>작은 고양이 콩이가 살금살금 들어왔어요."},
+      {art:"📚🐱📚", text:"콩이는 책장 사이를 걸었어요.<br>책 냄새가 참 좋았어요."},
+      {art:"📕💨", text:"그때 높은 책장에서<br>빨간 책 한 권이 툭 떨어졌어요."}
+    ],
+    ask:"콩이는 어떻게 할까요?",
+    choices:[
+      {label:"📖 책을 펼쳐 본다", art:"📖🐟🐟", text:"책 속에는 물고기 그림이 가득했어요.<br>콩이는 꼬리를 살랑살랑 흔들었어요."},
+      {label:"🙋 선생님을 부른다", art:"🙋‍♀️📕🐱", text:"사서 선생님이 책을 제자리에 꽂아 주었어요.<br>\"고마워, 콩이야!\""}
+    ],
+    quiz:[
+      {q:"도서관에 들어온 동물은 누구일까요?", opts:["🐱 고양이","🐶 강아지","🐰 토끼"], a:0},
+      {q:"책장에서 떨어진 책은 무슨 색이었나요?", opts:["파란색","빨간색","노란색"], a:1}
+    ]},
+  { id:"rain", emo:"☂️", title:"비 오는 날 우산 친구",
+    pages:[
+      {art:"🌧️🌧️", text:"아침부터 비가 주룩주룩 내렸어요."},
+      {art:"🧒☂️", text:"하늘이는 노란 우산을 쓰고<br>학교에 갔어요."},
+      {art:"🧒💧", text:"길에서 친구 바다를 만났어요.<br>바다는 우산이 없어서 비를 맞고 있었어요."}
+    ],
+    ask:"하늘이는 어떻게 할까요?",
+    choices:[
+      {label:"☂️ 우산을 같이 쓴다", art:"🧒☂️🧒", text:"둘은 노란 우산 하나를 같이 썼어요.<br>어깨가 조금 젖었지만 웃음이 났어요."},
+      {label:"🧥 비옷을 빌려준다", art:"🧥😄💦", text:"바다는 비옷을 입고 활짝 웃었어요.<br>둘은 물웅덩이를 폴짝 넘으며 학교에 갔어요."}
+    ],
+    quiz:[
+      {q:"하늘이의 우산은 무슨 색이었나요?", opts:["초록색","보라색","노란색"], a:2},
+      {q:"그날 날씨는 어땠나요?", opts:["☀️ 해가 쨍쨍했어요","🌧️ 비가 왔어요","❄️ 눈이 왔어요"], a:1}
+    ]},
+  { id:"moon", emo:"🐿️", title:"달님을 좋아하는 다람쥐",
+    pages:[
+      {art:"🐿️🌕", text:"다람쥐 토리는 밤마다 달님을 보았어요."},
+      {art:"🐿️💭", text:"\"달님, 나도 가까이 가 보고 싶어요!\""},
+      {art:"🌳🐿️", text:"토리는 제일 높은 나무 꼭대기로<br>영차영차 올라갔어요."}
+    ],
+    ask:"토리는 어떻게 할까요?",
+    choices:[
+      {label:"🌟 소원을 빈다", art:"🌠🐿️💤", text:"토리가 소원을 빌자 별똥별이 반짝 지나갔어요.<br>토리는 기분 좋게 잠이 들었어요."},
+      {label:"👋 손을 흔든다", art:"☁️🌕😊", text:"토리가 손을 흔들자 구름이 비켜 났어요.<br>달님이 환하게 웃어 주는 것 같았어요."}
+    ],
+    quiz:[
+      {q:"토리는 어떤 동물일까요?", opts:["🐻 곰","🐿️ 다람쥐","🦊 여우"], a:1},
+      {q:"토리는 어디로 올라갔나요?", opts:["🌳 나무 꼭대기","🏠 지붕 위","⛰️ 산꼭대기"], a:0}
+    ]}
+];
+const SLOT_COUNT = 6; // 아이가 그린 동그라미 6개
+
+/* ---------- 레벨 · 옷장 ---------- */
+const XP_PER_LEVEL = 3, MAX_LEVEL = 5;
+const LEVEL_NAMES = ["", "새싹 독자", "꼬마 독자", "이야기 탐험가", "책벌레", "이야기 박사"];
+const CLOSET = {
+  color:{name:"옷 색", list:[
+    {id:"pink", label:"분홍", fill:"#ff9fb2", lv:1},
+    {id:"sky",  label:"하늘", fill:"#8fd3ff", lv:2},
+    {id:"violet", label:"보라", fill:"#c7a2ff", lv:4}]},
+  hat:{name:"머리 장식", list:[
+    {id:"none", label:"없음", ic:"", lv:1},
+    {id:"ribbon", label:"리본", ic:"🎀", lv:1},
+    {id:"flower", label:"꽃핀", ic:"🌸", lv:2},
+    {id:"crown", label:"왕관", ic:"👑", lv:3}]},
+  item:{name:"손에 드는 것", list:[
+    {id:"none", label:"없음", ic:"", lv:1},
+    {id:"book", label:"책", ic:"📖", lv:1},
+    {id:"balloon", label:"풍선", ic:"🎈", lv:3},
+    {id:"wand", label:"요술봉", ic:"🪄", lv:4}]}
+};
+
+/* ---------- 저장 (기기 안) ---------- */
+const KEY = "cherry-story-v1";
+function fresh(){ return {xp:0, seen:{}, outfit:{color:"pink", hat:"ribbon", item:"book"}}; }
+let S = load();
+function load(){
+  try{
+    const v = JSON.parse(localStorage.getItem(KEY));
+    if(v && typeof v.xp === "number"){
+      const d = fresh();
+      return {xp:v.xp, seen:v.seen || {}, outfit:Object.assign(d.outfit, v.outfit || {})};
+    }
+  }catch(e){}
+  return fresh();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+const levelOf = xp => Math.min(MAX_LEVEL, Math.floor(xp / XP_PER_LEVEL) + 1);
+
+/* ---------- 체리 그림 (SVG) ---------- */
+function cherryPair(x, y, s){
+  return `<g transform="translate(${x} ${y}) scale(${s || 1})">
+    <path d="M0 -14 Q-2 -4 -6 2 M0 -14 Q4 -4 6 3" stroke="#3a9a4a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M0 -14 q6 -6 12 -2 q-6 4 -12 2z" fill="#3a9a4a"/>
+    <circle cx="-6" cy="5" r="6" fill="#e2384d"/><circle cx="6" cy="6" r="6" fill="#e2384d"/>
+    <circle cx="-8" cy="3" r="1.8" fill="#fff" opacity=".8"/><circle cx="4" cy="4" r="1.8" fill="#fff" opacity=".8"/></g>`;
+}
+function cherrySVG(outfit){
+  const o = outfit || S.outfit;
+  const color = (CLOSET.color.list.find(c => c.id === o.color) || CLOSET.color.list[0]).fill;
+  const hat = (CLOSET.hat.list.find(c => c.id === o.hat) || {}).ic || "";
+  const item = (CLOSET.item.list.find(c => c.id === o.item) || {}).ic || "";
+  const hair = "#5b3a2e", skin = "#ffd9c2", ink = "#3a2a2a";
+  return `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="마스코트 체리">
+  <path d="M66 66 C34 120 30 190 36 240 L50 242 C48 190 54 124 80 76 Z" fill="${hair}"/>
+  <path d="M134 66 C166 120 170 190 164 240 L150 242 C152 190 146 124 120 76 Z" fill="${hair}"/>
+  ${cherryPair(43, 246, .9)}${cherryPair(157, 246, .9)}
+  <line x1="82" y1="136" x2="48" y2="82" stroke="${skin}" stroke-width="11" stroke-linecap="round"/>
+  <line x1="118" y1="136" x2="152" y2="82" stroke="${skin}" stroke-width="11" stroke-linecap="round"/>
+  <circle cx="47" cy="79" r="8" fill="${skin}"/><circle cx="153" cy="79" r="8" fill="${skin}"/>
+  <path d="M80 128 L120 128 L142 222 L58 222 Z" fill="${color}" stroke="${ink}" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M78 130 L82 150 L92 136 Z M122 130 L118 150 L108 136 Z" fill="#fff" opacity=".7"/>
+  ${cherryPair(100, 160, .7)}
+  <line x1="91" y1="222" x2="89" y2="244" stroke="${skin}" stroke-width="9" stroke-linecap="round"/>
+  <line x1="109" y1="222" x2="111" y2="244" stroke="${skin}" stroke-width="9" stroke-linecap="round"/>
+  <ellipse cx="86" cy="248" rx="9" ry="5" fill="#e2384d"/><ellipse cx="114" cy="248" rx="9" ry="5" fill="#e2384d"/>
+  <line x1="82" y1="130" x2="126" y2="188" stroke="${ink}" stroke-width="3"/>
+  <rect x="118" y="184" width="22" height="18" rx="5" fill="#fff" stroke="${ink}" stroke-width="3"/>
+  ${cherryPair(129, 194, .45)}
+  <rect x="94" y="108" width="12" height="22" fill="${skin}"/>
+  <circle cx="100" cy="80" r="34" fill="${skin}" stroke="${ink}" stroke-width="2.5"/>
+  <path d="M64 80 C60 38 140 38 136 80 L128 66 L120 80 L112 62 L104 78 L96 62 L88 80 L80 64 L72 80 Z" fill="${hair}"/>
+  ${cherryPair(64, 60)}${cherryPair(136, 60)}
+  <polyline points="80,82 89,87 80,92" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="120,82 111,87 120,92" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M91 97 Q100 109 109 97 Z" fill="#c2414f" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/>
+  <ellipse cx="78" cy="99" rx="6" ry="4" fill="#ff8fa0" opacity=".6"/><ellipse cx="122" cy="99" rx="6" ry="4" fill="#ff8fa0" opacity=".6"/>
+  ${hat ? `<text x="100" y="46" font-size="30" text-anchor="middle">${hat}</text>` : ""}
+  ${item ? `<text x="162" y="76" font-size="28" text-anchor="middle">${item}</text>` : ""}
+</svg>`;
+}
+
+/* ---------- 도우미 ---------- */
+const $ = id => document.getElementById(id);
+const arrowSVG = dir => `<svg viewBox="0 0 64 64"><path d="${dir === "L" ? "M46 10 L14 32 L46 54 Z" : "M18 10 L50 32 L18 54 Z"}"
+  fill="#fff" stroke="#2b2b2b" stroke-width="4" stroke-linejoin="round"/></svg>`;
+let current = "sHome";
+function show(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
+  current = id;
+  $("side").hidden = !(id === "sStory" || id === "sQuiz");
+  if(!$("side").hidden) $("sideCherry").innerHTML = cherrySVG();
+  window.scrollTo(0, 0);
+}
+function say(key, anim){
+  const text = LINES[key] || key;
+  if(current === "sCloset"){ toast("🍒 " + text); return; }
+  const onSide = !$("side").hidden;
+  const bubble = onSide ? $("sideBubble") : $("homeBubble");
+  const pic = onSide ? $("sideCherry") : $("homeCherry");
+  bubble.textContent = text;
+  if(anim){ pic.classList.remove("jump", "tilt", "spin"); void pic.offsetWidth; pic.classList.add(anim); }
+}
+let toastT;
+function toast(msg){
+  const t = $("toast"); t.innerHTML = msg; t.classList.add("on");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 2400);
+}
+function confetti(){
+  const colors = ["#e2384d", "#ff9fb2", "#f5b301", "#3a9a4a", "#8fd3ff", "#c7a2ff"];
+  for(let i = 0; i < 40; i++){
+    const c = document.createElement("span");
+    c.className = "confetti";
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.background = colors[i % colors.length];
+    c.style.animationDelay = (Math.random() * .6) + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 3200);
+  }
+}
+function addXP(n, why){
+  const before = levelOf(S.xp);
+  S.xp += n; save();
+  const after = levelOf(S.xp);
+  if(after > before){
+    const opened = Object.values(CLOSET).flatMap(g => g.list).filter(it => it.lv === after && it.id !== "none");
+    confetti();
+    toast(`🎉 레벨 업! 레벨 ${after} · ${LEVEL_NAMES[after]}` + (opened.length ? "<br>옷장에 새 옷이 열렸어요!" : ""));
+  }else if(why){
+    toast(`+${n} 경험치 (${why})`);
+  }
+}
+
+/* ---------- 게임판 ---------- */
+let sel = 0;
+function levelInfo(){
+  const lv = levelOf(S.xp);
+  const inLv = lv >= MAX_LEVEL ? XP_PER_LEVEL : S.xp % XP_PER_LEVEL;
+  return {lv, pct: inLv / XP_PER_LEVEL * 100,
+    sub: lv >= MAX_LEVEL ? "최고 레벨이에요!" : `경험치 ${inLv} / ${XP_PER_LEVEL}`};
+}
+function renderLevel(){
+  const L = levelInfo();
+  $("lvName").textContent = `레벨 ${L.lv} · ${LEVEL_NAMES[L.lv]}`;
+  $("lvFill").style.width = L.pct + "%";
+  $("lvSub").textContent = L.sub;
+}
+function renderSlots(){
+  const box = $("slots"); box.innerHTML = "";
+  for(let i = 0; i < SLOT_COUNT; i++){
+    const st = STORIES[i];
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "slot" + (st ? "" : " locked") + (i === sel ? " sel" : "");
+    b.setAttribute("aria-label", st ? st.title : "곧 나와요");
+    b.innerHTML = st ? st.emo : "🔒<small>곧<br>나와요</small>";
+    if(st && (S.seen[st.id] || []).length) b.innerHTML += `<span class="done">✔</span>`;
+    b.onclick = () => { sel = i; renderHome(); };
+    box.appendChild(b);
+  }
+}
+function renderQBox(){
+  const st = STORIES[sel], q = $("qBox");
+  if(!st){
+    q.innerHTML = `<span class="lbl">문제</span><div class="emo">🔒</div><div class="ttl">곧 나와요!</div><div class="meta">새 이야기를 준비하고 있어요.</div>`;
+    return;
+  }
+  const seen = (S.seen[st.id] || []).length;
+  q.innerHTML = `<span class="lbl">문제</span><div class="emo">${st.emo}</div><div class="ttl">${st.title}</div>
+    <div class="meta">${seen ? `본 결말 ${seen} / ${st.choices.length}` : "아직 안 읽었어요"}${seen && seen < st.choices.length ? " · 다른 결말도 있어요!" : ""}</div>
+    <button class="go" type="button" id="startBtn">📖 읽기 시작</button>`;
+  $("startBtn").onclick = () => startStory(sel);
+}
+function renderHome(){
+  $("homeCherry").innerHTML = cherrySVG();
+  renderLevel(); renderSlots(); renderQBox();
+}
+$("homePrev").innerHTML = arrowSVG("L");
+$("homeNext").innerHTML = arrowSVG("R");
+$("homePrev").onclick = () => { sel = (sel + SLOT_COUNT - 1) % SLOT_COUNT; renderHome(); };
+$("homeNext").onclick = () => { sel = (sel + 1) % SLOT_COUNT; renderHome(); };
+$("toCloset").onclick = openCloset;
+
+/* ---------- 이야기 읽기 ---------- */
+let R = null; // {st, page, choice, counted}
+function startStory(i){
+  R = {st: STORIES[i], page: 0, choice: null, counted: false};
+  show("sStory"); renderStory();
+  say("이야기를 읽어 보자! 다 읽으면 문제가 나와.", "jump");
+}
+function renderStory(){
+  const st = R.st, n = st.pages.length;   // 0..n-1 본문, n 갈림길, n+1 결말
+  let body;
+  if(R.page < n){
+    const p = st.pages[R.page];
+    body = `<div class="page-art">${p.art}</div><div class="page-text">${p.text}</div>`;
+  }else if(R.page === n){
+    body = `<div class="page-art">🤔</div><div class="page-text">${st.ask}
+      <div class="choices">${st.choices.map((c, k) => `<button class="choice" type="button" data-k="${k}">${c.label}</button>`).join("")}</div></div>`;
+  }else{
+    const c = st.choices[R.choice];
+    body = `<div class="page-art">${c.art}</div><div class="page-text">${c.text}<div style="font-size:22px;color:#b8243a;margin-top:10px">- 끝 -</div></div>`;
+  }
+  const last = R.page === n + 1;
+  $("storyPanel").innerHTML = `<h2>${st.emo} ${st.title}</h2><div class="page-no">${R.page + 1} / ${n + 2} 쪽</div>${body}
+    <div class="nav">
+      <button class="ghost" type="button" id="storyHome">게임판으로</button>
+      <div class="flip">
+        <button class="arrow" type="button" id="pgPrev" aria-label="앞쪽" ${R.page === 0 || last ? "disabled" : ""}>${arrowSVG("L")}</button>
+        <span class="mid">넘기기</span>
+        <button class="arrow" type="button" id="pgNext" aria-label="다음 쪽" ${R.page >= n ? "disabled" : ""}>${arrowSVG("R")}</button>
+      </div>
+      ${last ? `<button class="go" type="button" id="toQuiz">문제 풀기 ▶</button>` : `<span style="width:120px"></span>`}
+    </div>`;
+  $("storyHome").onclick = goHome;
+  $("pgPrev").onclick = () => { R.page--; renderStory(); };
+  $("pgNext").onclick = () => { R.page++; renderStory(); };
+  document.querySelectorAll(".choice").forEach(b => b.onclick = () => {
+    R.choice = +b.dataset.k; R.page = n + 1;
+    const seen = S.seen[st.id] || (S.seen[st.id] = []);
+    if(!seen.includes(R.choice)) seen.push(R.choice);
+    save();
+    renderStory();
+    if(!R.counted){ R.counted = true; addXP(1, "이야기 다 읽음"); }
+    say("이야기 끝! 이제 문제를 풀어 볼까?", "jump");
+  });
+  if(last) $("toQuiz").onclick = startQuiz;
+}
+
+/* ---------- 문제 ---------- */
+let Q = null; // {st, i, solved}
+function startQuiz(){
+  Q = {st: R.st, i: 0, solved: false};
+  show("sQuiz"); renderQuiz();
+  say("문제야! 잘 생각해 봐.", "jump");
+}
+function renderQuiz(){
+  const st = Q.st, item = st.quiz[Q.i];
+  $("quizPanel").innerHTML = `<h2>${st.emo} ${st.title} · 문제</h2><div class="page-no">${Q.i + 1} / ${st.quiz.length} 번</div>
+    <div class="quiz-q">${item.q}</div>
+    <div class="opts">${item.opts.map((o, k) => `<button class="opt" type="button" data-k="${k}">${o}</button>`).join("")}</div>
+    <div class="nav"><button class="ghost" type="button" id="quizHome">게임판으로</button>
+      <button class="go" type="button" id="quizNext" hidden>${Q.i + 1 < st.quiz.length ? "다음 문제 ▶" : "끝내기 ▶"}</button></div>`;
+  $("quizHome").onclick = goHome;
+  document.querySelectorAll(".opt").forEach(b => b.onclick = () => answer(+b.dataset.k, b));
+  $("quizNext").onclick = () => {
+    if(Q.i + 1 < st.quiz.length){ Q.i++; Q.solved = false; renderQuiz(); say("다음 문제야!", "jump"); }
+    else finishStory();
+  };
+}
+function answer(k, btn){
+  if(Q.solved) return;
+  if(k === Q.st.quiz[Q.i].a){
+    Q.solved = true;
+    btn.classList.add("right");
+    document.querySelectorAll(".opt").forEach(b => b.disabled = b !== btn);
+    say("good", "jump");
+    addXP(1, "문제 맞힘");
+    $("quizNext").hidden = false;
+  }else{
+    btn.classList.add("wrong"); btn.disabled = true;
+    say("wrong", "tilt");
+  }
+}
+function finishStory(){
+  const L = levelInfo();
+  $("quizPanel").innerHTML = `<h2>${Q.st.emo} ${Q.st.title}</h2>
+    <div class="result">
+      <div style="font-size:72px">🎉</div>
+      <div class="big">이야기와 문제를 다 끝냈어요!</div>
+      <div style="font-size:22px;font-weight:700">레벨 ${L.lv} · ${LEVEL_NAMES[L.lv]}</div>
+      <div class="lv-bar"><div class="lv-fill" style="width:${L.pct}%"></div></div>
+      <div class="lv-sub">${L.sub}</div>
+      <div class="btn-row">
+        <button class="go" type="button" id="resHome">게임판으로</button>
+        <button class="ghost" type="button" id="resCloset">👗 옷장 가기</button>
+      </div>
+    </div>`;
+  $("resHome").onclick = goHome;
+  $("resCloset").onclick = openCloset;
+  confetti();
+  say("done", "spin");
+}
+function goHome(){ show("sHome"); renderHome(); say("hello", "jump"); }
+
+/* ---------- 옷장 ---------- */
+function openCloset(){ show("sCloset"); renderCloset(); }
+function renderCloset(){
+  const lv = levelOf(S.xp);
+  $("closetCherry").innerHTML = cherrySVG();
+  $("racks").innerHTML = Object.entries(CLOSET).map(([key, g]) => `<div class="rack"><h3>${g.name}</h3><div class="items">
+    ${g.list.map(it => {
+      const locked = it.lv > lv, on = S.outfit[key] === it.id;
+      const pic = key === "color" ? `<span class="sw" style="background:${it.fill}"></span>` : `<span class="ic">${it.ic || "✖️"}</span>`;
+      return `<button class="item${on ? " on" : ""}${locked ? " lock" : ""}" type="button" data-g="${key}" data-id="${it.id}" data-lv="${it.lv}">
+        ${locked ? `<span class="ic">🔒</span>레벨 ${it.lv}이면<br>열려요` : `${pic}${it.label}`}</button>`;
+    }).join("")}</div></div>`).join("");
+  document.querySelectorAll(".item").forEach(b => b.onclick = () => {
+    if(+b.dataset.lv > levelOf(S.xp)){ toast(`레벨 ${b.dataset.lv}이 되면 입을 수 있어요!`); return; }
+    S.outfit[b.dataset.g] = b.dataset.id; save(); renderCloset();
+    const pic = $("closetCherry"); pic.classList.remove("jump"); void pic.offsetWidth; pic.classList.add("jump");
+  });
+}
+$("closetBack").onclick = goHome;
+
+/* ---------- 막혔을 때 (20초 동안 아무것도 안 누르면 / 다른 창에 갔다 오면) ---------- */
+let idleT;
+function resetIdle(){
+  clearTimeout(idleT);
+  idleT = setTimeout(() => { if(!$("receipt").classList.contains("on")) say("stuck", "tilt"); }, 20000);
+}
+["pointerdown", "keydown"].forEach(ev => document.addEventListener(ev, resetIdle));
+let wasHidden = false;
+document.addEventListener("visibilitychange", () => {
+  if(document.hidden){ wasHidden = true; return; }
+  if(wasHidden){ wasHidden = false; say("stuck", "tilt"); resetIdle(); }
+});
+
+/* ---------- 🧾 만든 기록 ---------- */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"}[c]));
+const num = (v, unit) => v === null || v === undefined ? "계산 중" : Number(v).toLocaleString("ko-KR") + unit;
+async function openReceipt(){
+  $("receipt").classList.add("on"); $("rcBody").textContent = "불러오는 중…";
+  try{
+    const r = await fetch("receipt.json", {cache: "no-store"});
+    if(!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    $("rcBody").innerHTML = `<p style="font-size:20px;font-weight:700;margin:0 0 10px">${esc(d.title || "")}</p>
+      <div class="rc-nums">
+        <span>AI가 일한 시간</span><b>${num(d.minutes, "분")}</b>
+        <span>주고받은 글자 조각(토큰)</span><b>${num(d.tokens, "개")}</b>
+        <span>돈으로 치면</span><b>${d.won === null || d.won === undefined ? "계산 중" : "약 " + num(d.won, "원")}</b>
+        <span>고친 횟수</span><b>${num(d.revisions, "번")}</b>
+      </div>
+      <h3>🙋 AI 혼자서는 못 해서 사람이 정한 것</h3>
+      <ul>${(d.aiCouldNot || []).map(t => `<li>${esc(t)}</li>`).join("")}</ul>
+      <h3>💰 더 만들고 싶지만 돈·준비가 더 드는 것</h3>
+      <ul>${(d.costsMore || []).map(c => `<li><b>${esc(c.feature)}</b> — ${esc(c.why)}</li>`).join("")}</ul>`;
+  }catch(e){
+    $("rcBody").innerHTML = `<p style="font-size:18px">기록을 불러오지 못했어요. 인터넷 주소로 열었는지 확인해 주세요.</p>`;
+  }
+}
+$("receiptBtn").onclick = openReceipt;
+$("rcClose").onclick = () => $("receipt").classList.remove("on");
+$("receipt").onclick = e => { if(e.target.id === "receipt") $("receipt").classList.remove("on"); };
+document.addEventListener("keydown", e => { if(e.key === "Escape") $("receipt").classList.remove("on"); });
+
+/* ---------- 시작 ---------- */
+renderHome();
+say("hello", "jump");
+resetIdle();
+</script>
+</body>
+</html>

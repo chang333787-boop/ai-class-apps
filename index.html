@@ -14,6 +14,10 @@ a.card:hover,a.card:focus-visible{transform:translateY(-4px);box-shadow:0 10px 0
 a.card:active{transform:translateY(3px);box-shadow:0 2px 0 var(--c)}
 .emo{font-size:72px;line-height:1;width:120px;height:120px;display:grid;place-items:center;border-radius:50%;background:var(--c)}
 .name{font-size:22px;font-weight:700;text-align:center;word-break:keep-all}
+.total{max-width:1000px;margin:0 auto 48px;padding:0 16px}
+.total div{background:#fff;border:3px dashed var(--line);border-radius:22px;padding:22px;text-align:center}
+.total h2{margin:0 0 8px;font-size:24px}.total p{margin:6px 0;font-size:18px}.total b{font-size:28px;color:#e8590c}
+.total small{color:var(--sub)}
 </style></head>
 <body>
 <header><h1>우리 반 AI 작품관</h1><p>카드를 눌러 친구가 만든 프로그램에 들어가 보세요!</p></header>
@@ -25,4 +29,17 @@ a.card:active{transform:translateY(3px);box-shadow:0 2px 0 var(--c)}
   <a class="card" href="cherry-story/" style="--c:#fde2e4"><span class="emo">🍒</span><span class="name">체리의 이야기 게임</span></a>
   <a class="card" href="chamchamcham/" style="--c:#fef3c7"><span class="emo">🔨</span><span class="name">뿅망치 참참참 게임</span></a>
 </main>
+<section class="total"><div>
+  <h2>🧾 AI로 만들면 공짜일까요?</h2>
+  <p>작품 6개의 첫 버전을 만드는 데 AI가 쓴 돈</p>
+  <p><b id="won">계산 중</b></p>
+  <p id="detail"></p>
+  <small>글씨 읽기 → 계획 → 만들기까지. 고칠 때마다 더 늘어나요. (API 요금 기준, 1달러=1,400원)</small>
+</div></section>
+<script>
+(async()=>{const ds=['free-ai','pizza','nyonyo','cleanup','cherry-story','chamchamcham'];let w=0,t=0,m=0;
+for(const d of ds){try{const r=await (await fetch(d+'/receipt.json',{cache:'no-store'})).json();w+=r.won||0;t+=r.tokens||0;m+=r.minutes||0;}catch(e){}}
+if(w){document.getElementById('won').textContent='약 '+w.toLocaleString()+'원';
+document.getElementById('detail').textContent='AI가 일한 시간 '+m+'분 · 주고받은 글자 조각(토큰) '+Math.round(t/10000).toLocaleString()+'만 개';}})();
+</script>
 </body></html>

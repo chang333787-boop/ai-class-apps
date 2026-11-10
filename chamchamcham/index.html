@@ -1,7 +1,579 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>뿅망치 참참참 게임</title>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,"Malgun Gothic",sans-serif;background:#fff8ee;color:#2b2b2b;text-align:center}
-a.home{position:fixed;top:12px;left:12px;padding:10px 16px;border-radius:12px;background:#fff;border:2px solid #e6dccb;color:#2b2b2b;text-decoration:none;font-size:18px}
-.e{font-size:80px}h1{font-size:32px;margin:8px}</style></head>
-<body><a class="home" href="../">← 처음으로</a><div><div class="e">🔨</div><h1>뿅망치 참참참 게임</h1><p style="font-size:20px">만드는 중이에요!</p></div></body></html>
+<style>
+:root{--bg:#fff8ee;--ink:#2b2b2b;--sub:#6b6b6b;--line:#e6dccb;--card:#fff;--red:#e53935;--p1:#2f7de1;--p2:#f08a24;--ok:#2e9d58}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:system-ui,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:var(--bg);color:var(--ink);-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+.corner{position:fixed;top:10px;z-index:30;padding:10px 14px;border-radius:12px;background:#fff;border:2px solid var(--line);color:var(--ink);text-decoration:none;font-size:17px;box-shadow:0 3px 0 var(--line)}
+.corner.home{left:10px}.corner.rcpt{right:10px}
+#app{max-width:1000px;margin:0 auto;padding:64px 14px 120px}
+.panel{display:none}.panel.on{display:block}
+.box{background:var(--card);border:3px solid var(--ink);border-radius:18px}
+h2{font-size:28px;margin:6px 0 14px;text-align:center}
+.big{display:block;width:100%;padding:18px;border-radius:18px;border:3px solid var(--ink);background:#fff;font-size:24px;font-weight:700;box-shadow:0 5px 0 var(--ink);margin:12px 0}
+.big:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.big.yellow{background:#fff1b8}.big.blue{background:#dbeafe}.big.gray{background:#eee;color:#666}
+.back{margin-top:18px}
+
+/* 첫 화면 */
+.title-bar{padding:12px 16px;font-size:clamp(24px,4.6vw,38px);font-weight:800;text-align:center;letter-spacing:2px}
+.scene{margin-top:14px;display:grid;grid-template-columns:1fr 1.4fr;align-items:center;min-height:240px;padding:10px 18px}
+.scene .words{font-size:clamp(28px,5.5vw,48px);font-weight:800;line-height:1.35}
+.scene .words span{display:block}
+.scene svg{width:100%;max-height:260px}
+.menu{margin-top:14px;display:grid;grid-template-columns:1.3fr 1fr 1.3fr;gap:12px}
+.menu button{background:#fff;border:3px solid var(--ink);border-radius:16px;font-size:clamp(20px,3.4vw,28px);font-weight:700;padding:14px 8px;min-height:120px;box-shadow:0 5px 0 var(--ink)}
+.menu button:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.menu .deco{display:flex;align-items:center;justify-content:center;gap:8px}
+.menu .deco .mini{font-size:30px;line-height:1.2}
+.menu .split{display:flex;flex-direction:column;padding:0;overflow:hidden}
+.menu .split span{flex:1;display:grid;place-items:center;padding:10px}
+.menu .split span+span{border-top:3px solid var(--ink);background:#f6f6f6}
+
+/* 꾸미기 */
+.custom-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.who{padding:14px;text-align:center}
+.who h3{margin:4px 0;font-size:24px}
+.who svg{width:150px;height:170px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0}
+.opts button{min-width:52px;height:52px;border-radius:12px;border:3px solid #ccc;background:#fff;font-size:22px}
+.opts button.sel{border-color:var(--ink);box-shadow:0 0 0 3px #ffd54f}
+.opts .sw{width:52px}
+
+/* 설명 */
+.rules{padding:18px 22px;font-size:22px;line-height:1.7}
+.rules ol{margin:0;padding-left:28px}
+
+/* 게임 */
+.score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:10px 14px}
+.score .side{display:flex;flex-direction:column;gap:4px}
+.score .side.r{align-items:flex-end;text-align:right}
+.score .nm{font-size:22px;font-weight:800}
+.score .num{font-size:34px;font-weight:800}
+.dots{display:flex;gap:3px;flex-wrap:wrap}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid #bbb;display:block}
+.dots i.f{background:#ffc107;border-color:#d39e00}
+.score .goal{font-size:18px;color:var(--sub);text-align:center}
+.call{text-align:center;font-size:clamp(36px,6vw,60px);font-weight:900;height:1.25em;margin:6px 0 0;color:var(--red)}
+.tbar{height:16px;border-radius:9px;background:#eee;border:2px solid var(--ink);overflow:hidden;margin:4px 0 8px}
+.tbar div{height:100%;width:100%;background:linear-gradient(90deg,#ffb300,#e53935)}
+.arena{position:relative;display:flex;justify-content:space-around;align-items:flex-end;padding:8px 6px 4px;min-height:200px}
+.arena .fig{position:relative;text-align:center;width:44%}
+.arena svg{width:100%;max-width:170px;max-height:200px;height:auto}
+.arena .tag{font-size:20px;font-weight:800;margin-top:2px}
+.arrow{position:absolute;left:50%;top:-6px;transform:translateX(-50%);font-size:44px;opacity:0;transition:opacity .15s}
+.arrow.show{opacity:1}
+.boom{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%) scale(.3);font-size:clamp(44px,10vw,80px);font-weight:900;opacity:0;pointer-events:none;-webkit-text-stroke:2px #fff;paint-order:stroke}
+.boom.go{animation:boom .9s ease-out forwards}
+@keyframes boom{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+.shake{animation:shake .45s}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-8px) rotate(-4deg)}40%{transform:translateX(8px) rotate(4deg)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+/* 넓은 화면: [1P 버튼 | 그림 | 2P 버튼] 한 줄, 좁은 화면: 그림 위·버튼 아래 */
+.stage{display:grid;grid-template-columns:1fr 1.25fr 1fr;grid-template-areas:"p0 ar p1";gap:12px;align-items:stretch}
+.stage .p1{grid-area:p0}.stage .arena{grid-area:ar}.stage .p2{grid-area:p1}
+@media (max-width:900px){.stage{grid-template-columns:1fr 1fr;grid-template-areas:"ar ar" "p0 p1"}}
+.pad{padding:10px;text-align:center;border-width:4px}
+.pad.p1{border-color:var(--p1)}.pad.p2{border-color:var(--p2)}
+.pad .role{font-size:20px;font-weight:800;margin-bottom:6px}
+.dpad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:260px;margin:0 auto}
+.dpad button{height:62px;border-radius:14px;border:3px solid var(--ink);background:#fff;font-size:34px;box-shadow:0 4px 0 var(--ink)}
+.dpad button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.dpad button:disabled{opacity:.35;box-shadow:none}
+.dpad .u{grid-column:2}.dpad .l{grid-column:1;grid-row:2}.dpad .r{grid-column:3;grid-row:2}.dpad .d{grid-column:2;grid-row:3}
+.dpad .mid{grid-column:2;grid-row:2;display:grid;place-items:center;font-size:38px;font-weight:800;color:var(--ok)}
+.cpu-think{height:200px;display:grid;place-items:center;font-size:24px;font-weight:700;color:var(--sub)}
+.keys{font-size:14px;color:var(--sub);margin-top:6px}
+
+/* 결과 */
+.result{text-align:center;padding:24px}
+.result .crown{font-size:80px}
+.result .who-won{font-size:clamp(30px,6vw,46px);font-weight:900;margin:6px 0}
+.result .final{font-size:26px;margin-bottom:10px}
+
+/* 마스코트 */
+#mascot{position:fixed;right:10px;bottom:8px;z-index:25;display:flex;align-items:flex-end;gap:4px;pointer-events:none}
+#mascot svg{width:110px;height:100px;pointer-events:auto;cursor:pointer}
+#mascot.bounce svg{animation:bounce .6s}
+@keyframes bounce{0%,100%{transform:none}30%{transform:translateY(-14px)}60%{transform:translateY(0)}80%{transform:translateY(-5px)}}
+.bubble{max-width:250px;background:#fff;border:3px solid var(--ink);border-radius:18px;padding:10px 14px;font-size:22px;font-weight:700;margin-bottom:58px;opacity:0;transform:scale(.8);transform-origin:bottom right;transition:opacity .2s,transform .2s;pointer-events:none}
+.bubble.show{opacity:1;transform:none;pointer-events:auto}
+.bubble small{display:block;font-size:16px;font-weight:500;color:var(--sub);margin-top:4px}
+
+/* 영수증 창 */
+#rcptModal{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.45);display:none;place-items:center;padding:16px}
+#rcptModal.on{display:grid}
+.rcpt-card{background:#fff;max-width:440px;width:100%;border-radius:10px;padding:22px 22px 18px;font-size:18px;line-height:1.55;box-shadow:0 10px 30px rgba(0,0,0,.25);max-height:88vh;overflow:auto}
+.rcpt-card h3{text-align:center;margin:0 0 4px;font-size:24px}
+.rcpt-card .t{text-align:center;color:var(--sub);margin-bottom:10px}
+.rcpt-card .row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed #ccc;padding:6px 0}
+.rcpt-card .row b{white-space:nowrap}
+.rcpt-card h4{margin:14px 0 4px;font-size:19px}
+.rcpt-card ul{margin:0;padding-left:22px}
+.rcpt-card .close{display:block;margin:16px auto 0;padding:10px 26px;border-radius:12px;border:2px solid var(--ink);background:#fff1b8;font-size:20px;font-weight:700}
+
+@media (max-width:640px){
+  .scene{grid-template-columns:1fr}
+  .menu{grid-template-columns:1fr}
+  .custom-row{grid-template-columns:1fr}
+  .dpad button{height:58px}
+  #mascot svg{width:84px;height:76px}
+  .bubble{font-size:19px;margin-bottom:44px}
+}
+</style>
+</head>
+<body>
+<a class="corner home" href="../">← 처음으로</a>
+<button class="corner rcpt" id="rcptBtn" type="button">🧾 만든 기록</button>
+
+<div id="app">
+
+  <!-- 첫 화면 (한 화면) -->
+  <section class="panel on" id="pHome">
+    <div class="box title-bar">뿅망치 🔨 참 참 참 게임</div>
+    <div class="box scene">
+      <div class="words"><span>뿅망치</span><span>참 참 참</span><span>게임</span></div>
+      <svg id="homeScene" viewBox="0 0 360 240" aria-label="뿅망치를 든 사람과 피하는 사람"></svg>
+    </div>
+    <div class="menu">
+      <button type="button" class="deco" data-go="pCustom"><span class="mini">🙂<br>☁️</span><span>캐릭터<br>꾸미기</span></button>
+      <button type="button" data-go="pHelp">설명<br>듣기</button>
+      <button type="button" class="split" data-go="pMode"><span>친구들과 하기</span><span>방 코드 만들기</span></button>
+    </div>
+  </section>
+
+  <!-- 캐릭터 꾸미기 -->
+  <section class="panel" id="pCustom">
+    <h2>캐릭터 꾸미기</h2>
+    <div class="custom-row" id="customRow"></div>
+    <button class="big yellow back" type="button" data-go="pHome">다 꾸몄어요 ✔</button>
+  </section>
+
+  <!-- 설명 듣기 -->
+  <section class="panel" id="pHelp">
+    <h2>설명 듣기</h2>
+    <div class="box rules" id="rulesText">
+      <ol>
+        <li>한 사람은 <b>🔨 공격</b>, 한 사람은 <b>🏃 피하기</b>예요.</li>
+        <li>"참! 참! 참!" 하는 <b>3초 안에</b> 위, 아래, 왼쪽, 오른쪽 중 하나를 눌러요.</li>
+        <li>둘이 <b>같은 쪽</b>을 고르면 뿅! 맞아요. 공격한 사람이 1점!</li>
+        <li><b>다른 쪽</b>을 고르면 슉! 피했어요. 피한 사람이 1점!</li>
+        <li>한 판마다 공격과 피하기를 바꿔요. <b>10점</b>을 먼저 내면 이겨요!</li>
+      </ol>
+    </div>
+    <button class="big blue" type="button" id="speakBtn">🔊 읽어 주세요</button>
+    <button class="big yellow" type="button" data-go="pHome">알겠어요 ✔</button>
+  </section>
+
+  <!-- 누구와 할까 -->
+  <section class="panel" id="pMode">
+    <h2>누구와 할까요?</h2>
+    <button class="big yellow" type="button" id="startTwo">👫 한 기기에서 둘이 하기</button>
+    <button class="big blue" type="button" id="startCpu">🤖 컴퓨터와 하기</button>
+    <button class="big gray" type="button" id="roomBtn">🔑 방 코드 만들기 (준비 중)</button>
+    <button class="big back" type="button" data-go="pHome">← 첫 화면</button>
+  </section>
+
+  <!-- 게임 -->
+  <section class="panel" id="pGame">
+    <div class="box score">
+      <div class="side"><div class="nm" style="color:var(--p1)">1P</div><div class="num" id="s0">0</div><div class="dots" id="d0"></div></div>
+      <div class="goal">10점 먼저!</div>
+      <div class="side r"><div class="nm" style="color:var(--p2)" id="n1">2P</div><div class="num" id="s1">0</div><div class="dots" id="d1"></div></div>
+    </div>
+    <div class="call" id="call">준비!</div>
+    <div class="tbar"><div id="tfill"></div></div>
+    <div class="stage">
+      <div class="box pad p1"><div class="role" id="r0"></div><div id="pad0"></div><div class="keys">키보드: W A S D</div></div>
+      <div class="box arena">
+        <div class="fig" id="fig0"><div class="arrow" id="a0"></div><div id="c0"></div><div class="tag" id="t0"></div></div>
+        <div class="fig" id="fig1"><div class="arrow" id="a1"></div><div id="c1"></div><div class="tag" id="t1"></div></div>
+        <div class="boom" id="boom"></div>
+      </div>
+      <div class="box pad p2"><div class="role" id="r1"></div><div id="pad1"></div><div class="keys" id="k1">키보드: ↑ ← ↓ →</div></div>
+    </div>
+  </section>
+
+  <!-- 결과 -->
+  <section class="panel" id="pResult">
+    <div class="box result">
+      <div class="crown">🏆</div>
+      <div class="who-won" id="winText"></div>
+      <div class="final" id="finalScore"></div>
+      <button class="big yellow" type="button" id="againBtn">한 번 더! 🔨</button>
+      <button class="big" type="button" data-go="pHome">첫 화면</button>
+    </div>
+  </section>
+</div>
+
+<!-- 마스코트 뿅뿅이 -->
+<div id="mascot">
+  <div class="bubble" id="bubble"></div>
+  <svg viewBox="0 0 120 110" id="mascotSvg" aria-label="마스코트 뿅뿅이">
+    <path d="M28 40 L10 66" stroke="#555" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M92 40 L110 66" stroke="#555" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="9" cy="70" r="7" fill="#fff" stroke="#555" stroke-width="3"/>
+    <circle cx="111" cy="70" r="7" fill="#fff" stroke="#555" stroke-width="3"/>
+    <path d="M48 66 L46 96 M72 66 L74 96" stroke="#555" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="44" cy="100" rx="9" ry="6" fill="#fff" stroke="#555" stroke-width="3"/>
+    <ellipse cx="76" cy="100" rx="9" ry="6" fill="#fff" stroke="#555" stroke-width="3"/>
+    <rect x="24" y="16" width="72" height="52" rx="12" fill="#e53935" stroke="#7a1010" stroke-width="3"/>
+    <ellipse cx="24" cy="42" rx="7" ry="26" fill="#c62828" stroke="#7a1010" stroke-width="3"/>
+    <ellipse cx="96" cy="42" rx="7" ry="26" fill="#ef5350" stroke="#7a1010" stroke-width="3"/>
+    <path d="M40 24 h40" stroke="#ff8a80" stroke-width="4" stroke-linecap="round"/>
+    <path d="M42 38 q5 -6 10 0 M66 38 q5 -6 10 0" stroke="#2b2b2b" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M59 42 l-3 6 h5" stroke="#2b2b2b" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M48 52 q11 10 22 0 z" fill="#fff" stroke="#2b2b2b" stroke-width="2.5" stroke-linejoin="round"/>
+  </svg>
+</div>
+
+<!-- 만든 기록 창 -->
+<div id="rcptModal" role="dialog" aria-modal="true">
+  <div class="rcpt-card" id="rcptCard"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ---------- 저장 (이 기기 안) ---------- */
+  var KEY = "chamchamcham.v1";
+  var COLORS = ["#2f7de1","#f08a24","#2e9d58","#9c4dcc","#e91e63","#795548"];
+  var HATS = [["none","없음"],["cloud","☁️"],["cat","🐱"]];
+  var looks = [{color:COLORS[0],hat:"none"},{color:COLORS[1],hat:"cloud"}];
+  try{ var saved = JSON.parse(localStorage.getItem(KEY)); if(saved && saved.looks && saved.looks.length === 2) looks = saved.looks; }catch(e){}
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify({looks:looks})); }catch(e){} }
+
+  /* ---------- 캐릭터 그림 (SVG) ---------- */
+  // face: "smile" | "sad" | "wow" / hammer: 뿅망치를 들고 있음 / flip: 왼쪽을 봄
+  function charInner(look, face, hammer, flip){
+    var c = look.color, s = "";
+    s += '<g'+(flip?' transform="translate(160,0) scale(-1,1)"':'')+'>';
+    s += '<path d="M80 92 L80 140 M80 140 L60 182 M80 140 L100 182" stroke="#333" stroke-width="5" stroke-linecap="round" fill="none"/>';
+    s += '<rect x="64" y="92" width="32" height="44" rx="12" fill="'+c+'" stroke="#333" stroke-width="3"/>';
+    if(hammer){
+      s += '<path d="M90 100 L118 58" stroke="#333" stroke-width="5" stroke-linecap="round"/>';
+      s += '<path d="M70 104 L52 124" stroke="#333" stroke-width="5" stroke-linecap="round"/>';
+      s += '<line x1="118" y1="58" x2="128" y2="22" stroke="#8d6e63" stroke-width="6" stroke-linecap="round"/>';
+      s += '<g transform="rotate(15 128 20)"><rect x="102" y="2" width="54" height="30" rx="8" fill="#e53935" stroke="#7a1010" stroke-width="3"/>';
+      s += '<ellipse cx="102" cy="17" rx="5" ry="15" fill="#c62828" stroke="#7a1010" stroke-width="3"/><ellipse cx="156" cy="17" rx="5" ry="15" fill="#ef5350" stroke="#7a1010" stroke-width="3"/></g>';
+    }else{
+      s += '<path d="M90 104 L110 124 M70 104 L50 124" stroke="#333" stroke-width="5" stroke-linecap="round"/>';
+    }
+    s += '<circle cx="80" cy="62" r="28" fill="#ffe0bd" stroke="#333" stroke-width="3"/>';
+    s += '<path d="M62 44 q4 -8 8 -2 q4 -8 8 -2 q4 -8 8 -2" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    if(face === "sad"){
+      s += '<path d="M66 56 l8 4 M94 56 l-8 4" stroke="#333" stroke-width="3" stroke-linecap="round"/>';
+      s += '<path d="M68 80 q12 -10 24 0" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    }else if(face === "wow"){
+      s += '<circle cx="70" cy="60" r="3.5" fill="#333"/><circle cx="90" cy="60" r="3.5" fill="#333"/>';
+      s += '<ellipse cx="80" cy="76" rx="6" ry="7" fill="#333"/>';
+    }else{
+      s += '<circle cx="70" cy="60" r="3.5" fill="#333"/><circle cx="90" cy="60" r="3.5" fill="#333"/>';
+      s += '<path d="M68 72 q12 12 24 0" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    }
+    if(look.hat === "cloud"){
+      s += '<path d="M56 40 q-6 -16 12 -16 q6 -12 20 -4 q16 -6 18 12 q8 6 0 12 z" fill="#fff" stroke="#333" stroke-width="3"/>';
+    }else if(look.hat === "cat"){
+      s += '<path d="M56 46 L58 18 L74 36 Z M104 46 L102 18 L86 36 Z" fill="'+c+'" stroke="#333" stroke-width="3" stroke-linejoin="round"/>';
+      s += '<path d="M54 44 q26 -16 52 0" stroke="#333" stroke-width="4" fill="none"/>';
+    }
+    return s + '</g>';
+  }
+  function charSVG(look, face, hammer, flip){
+    return '<svg viewBox="0 0 160 190" xmlns="http://www.w3.org/2000/svg">' + charInner(look, face, hammer, flip) + '</svg>';
+  }
+
+  function drawHome(){
+    // 아이 그림처럼: 큰 사람이 뿅망치를 들고, 오른쪽 위에 작은 사람
+    $("homeScene").innerHTML =
+      '<g transform="translate(40,40) scale(1.05)">' + charInner(looks[0],"smile",true,false) + '</g>' +
+      '<g transform="translate(220,10) scale(.72)">' + charInner(looks[1],"wow",false,true) + '</g>';
+  }
+
+  /* ---------- 화면 바꾸기 ---------- */
+  function go(id){
+    var ps = document.querySelectorAll(".panel");
+    for(var i=0;i<ps.length;i++) ps[i].classList.toggle("on", ps[i].id === id);
+    if(id !== "pGame") stopGame();
+    if(id === "pHome") drawHome();
+    if(id === "pCustom") drawCustom();
+    window.scrollTo(0,0);
+  }
+  document.addEventListener("click", function(e){
+    var t = e.target.closest("[data-go]");
+    if(t){ sfx("tap"); go(t.getAttribute("data-go")); }
+  });
+
+  /* ---------- 마스코트 뿅뿅이 (아이가 정한 말 5가지) ---------- */
+  var LINES = { hello:"안녕", good:"잘했어", wrong:"다음에 다시 하자", stuck:"도와줄까?", end:"축하해" };
+  var bubbleTimer = null;
+  function say(kind, extra){
+    var b = $("bubble");
+    b.innerHTML = LINES[kind] + (extra ? "<small>"+extra+"</small>" : "");
+    b.classList.add("show");
+    var m = $("mascot"); m.classList.remove("bounce"); void m.offsetWidth; m.classList.add("bounce");
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(function(){ b.classList.remove("show"); }, extra ? 3800 : 2400);
+  }
+  $("mascotSvg").addEventListener("click", function(){ say("hello"); });
+
+  /* ---------- 꾸미기 ---------- */
+  function drawCustom(){
+    var row = $("customRow"); row.innerHTML = "";
+    [0,1].forEach(function(p){
+      var d = document.createElement("div");
+      d.className = "box who";
+      var html = '<h3 style="color:'+(p?"var(--p2)":"var(--p1)")+'">'+(p?"2P":"1P")+'</h3>'+charSVG(looks[p],"smile",false,false);
+      html += '<div class="opts">';
+      COLORS.forEach(function(c){ html += '<button type="button" class="sw'+(looks[p].color===c?" sel":"")+'" style="background:'+c+'" data-p="'+p+'" data-color="'+c+'" aria-label="몸 색"></button>'; });
+      html += '</div><div class="opts">';
+      HATS.forEach(function(h){ html += '<button type="button" class="'+(looks[p].hat===h[0]?"sel":"")+'" data-p="'+p+'" data-hat="'+h[0]+'">'+h[1]+'</button>'; });
+      html += '</div>';
+      d.innerHTML = html;
+      row.appendChild(d);
+    });
+  }
+  $("customRow").addEventListener("click", function(e){
+    var t = e.target.closest("button"); if(!t) return;
+    var p = +t.getAttribute("data-p");
+    if(t.hasAttribute("data-color")) looks[p].color = t.getAttribute("data-color");
+    if(t.hasAttribute("data-hat")) looks[p].hat = t.getAttribute("data-hat");
+    save(); sfx("tap"); drawCustom();
+  });
+
+  /* ---------- 설명 읽어 주기 (브라우저 내장) ---------- */
+  $("speakBtn").addEventListener("click", function(){
+    if(!("speechSynthesis" in window)){ say("stuck","이 기기는 읽어 주기가 안 돼요. 글을 읽어 봐요!"); return; }
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance($("rulesText").innerText);
+    u.lang = "ko-KR"; u.rate = 0.95;
+    var v = speechSynthesis.getVoices().filter(function(x){ return /^ko/i.test(x.lang); })[0];
+    if(v) u.voice = v;
+    speechSynthesis.speak(u);
+  });
+
+  /* ---------- 방 코드 (2차) ---------- */
+  $("roomBtn").addEventListener("click", function(){
+    say("stuck", "지금은 한 기기에서 둘이 해요! 다른 기기와 연결은 다음에 만들어요.");
+  });
+
+  /* ---------- 효과음 (브라우저 내장) ---------- */
+  var actx = null;
+  function sfx(kind){
+    try{
+      if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      var t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+      o.connect(g); g.connect(actx.destination);
+      var f1=600, f2=600, dur=.08, type="square", vol=.06;
+      if(kind==="tick"){ f1=f2=520; dur=.12; }
+      if(kind==="bop"){ f1=900; f2=180; dur=.35; type="sine"; vol=.3; }
+      if(kind==="whoosh"){ f1=300; f2=1200; dur=.25; type="sawtooth"; vol=.05; }
+      if(kind==="win"){ f1=520; f2=1040; dur=.6; type="triangle"; vol=.2; }
+      o.type = type;
+      o.frequency.setValueAtTime(f1, t);
+      o.frequency.exponentialRampToValueAtTime(f2, t+dur);
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(.001, t+dur);
+      o.start(t); o.stop(t+dur+.02);
+    }catch(e){}
+  }
+
+  /* ---------- 게임 ---------- */
+  var DIRS = { up:"⬆️", down:"⬇️", left:"⬅️", right:"➡️" };
+  var DIR_KEYS = ["up","left","right","down"];
+  var PAD_CLS = { up:"u", left:"l", right:"r", down:"d" };
+  var ROUND_MS = 3000; // 타이머: 한 판 3초
+  var GOAL = 10;       // 점수판: 10점 먼저
+  var G = null, timers = [];
+  function later(fn, ms){ timers.push(setTimeout(fn, ms)); }
+  function stopGame(){ timers.forEach(clearTimeout); timers = []; if(G) G.phase = "off"; }
+
+  function startGame(mode){
+    stopGame();
+    G = { mode:mode, score:[0,0], attacker:0, choice:[null,null], phase:"off" };
+    $("n1").textContent = mode === "cpu" ? "컴퓨터" : "2P";
+    $("k1").style.display = mode === "cpu" ? "none" : "";
+    go("pGame");
+    drawScore();
+    nextRound(true);
+  }
+  $("startTwo").addEventListener("click", function(){ sfx("tap"); startGame("two"); });
+  $("startCpu").addEventListener("click", function(){ sfx("tap"); startGame("cpu"); });
+  $("againBtn").addEventListener("click", function(){ sfx("tap"); startGame(G ? G.mode : "cpu"); });
+
+  function drawScore(){
+    for(var p=0;p<2;p++){
+      $("s"+p).textContent = G.score[p];
+      var h = ""; for(var i=0;i<GOAL;i++) h += '<i class="'+(i<G.score[p]?"f":"")+'"></i>';
+      $("d"+p).innerHTML = h;
+    }
+  }
+
+  function drawFigs(faces){
+    for(var p=0;p<2;p++){
+      var atk = (p === G.attacker);
+      $("c"+p).innerHTML = charSVG(looks[p], faces ? faces[p] : "smile", atk, p===1);
+      $("t"+p).textContent = atk ? "🔨 공격" : "🏃 피하기";
+      $("r"+p).textContent = (p===0 ? "1P" : (G.mode==="cpu" ? "컴퓨터" : "2P")) + " · " + (atk ? "🔨 공격" : "🏃 피하기");
+    }
+  }
+
+  function drawPads(){
+    for(var p=0;p<2;p++){
+      var el = $("pad"+p);
+      if(p===1 && G.mode==="cpu"){
+        el.innerHTML = '<div class="cpu-think">'+(G.choice[1] ? "🤖 골랐어요!" : "🤖 생각 중…")+'</div>';
+        continue;
+      }
+      var done = G.choice[p] !== null, open = G.phase === "pick";
+      var h = '<div class="dpad">';
+      DIR_KEYS.forEach(function(d){
+        h += '<button type="button" class="'+PAD_CLS[d]+'" data-p="'+p+'" data-dir="'+d+'"'+((done||!open)?" disabled":"")+' aria-label="'+d+'">'+DIRS[d]+'</button>';
+      });
+      h += '<div class="mid" title="골랐어요">'+(done ? "✔" : "")+'</div></div>';
+      el.innerHTML = h;
+    }
+  }
+
+  function pick(p, dir){
+    if(!G || G.phase !== "pick" || G.choice[p] !== null) return;
+    if(p===1 && G.mode==="cpu") return;
+    G.choice[p] = dir; // 고른 방향은 공개할 때까지 숨김
+    sfx("tap");
+    drawPads();
+  }
+  document.addEventListener("click", function(e){
+    var t = e.target.closest("[data-dir]");
+    if(t) pick(+t.getAttribute("data-p"), t.getAttribute("data-dir"));
+  });
+  document.addEventListener("keydown", function(e){
+    var k = e.key.toLowerCase();
+    var m0 = {w:"up",a:"left",s:"down",d:"right"}[k];
+    var m1 = {arrowup:"up",arrowleft:"left",arrowdown:"down",arrowright:"right"}[k];
+    if(m0) pick(0, m0);
+    if(m1 && G && G.phase === "pick"){ e.preventDefault(); pick(1, m1); }
+  });
+
+  function nextRound(first){
+    G.choice = [null,null];
+    G.phase = "ready";
+    $("a0").classList.remove("show"); $("a1").classList.remove("show");
+    $("call").textContent = "준비!";
+    var fill = $("tfill"); fill.style.transition = "none"; fill.style.width = "100%";
+    drawFigs(); drawPads();
+    later(function(){
+      G.phase = "pick";
+      drawPads();
+      void fill.offsetWidth;
+      fill.style.transition = "width "+(ROUND_MS/1000)+"s linear"; fill.style.width = "0%";
+      [0,1,2].forEach(function(i){
+        later(function(){ $("call").textContent = "참! " + (3-i); sfx("tick"); }, i*1000);
+      });
+      if(G.mode === "cpu"){
+        later(function(){
+          G.choice[1] = DIR_KEYS[Math.floor(Math.random()*4)];
+          drawPads();
+        }, 500 + Math.random()*1800);
+      }
+      later(reveal, ROUND_MS);
+    }, first ? 900 : 700);
+  }
+
+  function reveal(){
+    G.phase = "show";
+    drawPads();
+    var c = G.choice, atk = G.attacker, def = 1-atk;
+    for(var p=0;p<2;p++){
+      $("a"+p).textContent = c[p] ? DIRS[c[p]] : "⏰";
+      $("a"+p).classList.add("show");
+    }
+    // 판정: 같은 쪽이면 뿅!(공격 1점), 다른 쪽이면 슉!(피하기 1점), 못 고르면 그 사람이 짐
+    var winner = null, word = "", faces = ["smile","smile"];
+    if(c[0]===null && c[1]===null){ word = "둘 다 시간 끝!"; faces = ["wow","wow"]; }
+    else if(c[atk]===null){ winner = def; word = "시간 끝!"; faces[atk]="sad"; }
+    else if(c[def]===null){ winner = atk; word = "뿅!"; faces[def]="sad"; }
+    else if(c[atk]===c[def]){ winner = atk; word = "뿅!"; faces[def]="sad"; }
+    else { winner = def; word = "슉!"; faces[atk]="wow"; }
+
+    drawFigs(faces);
+    $("call").textContent = word;
+    var boom = $("boom");
+    boom.textContent = word; boom.style.color = word==="뿅!" ? "#e53935" : "#2f7de1";
+    boom.classList.remove("go"); void boom.offsetWidth; boom.classList.add("go");
+    if(word === "뿅!"){ sfx("bop"); var f=$("fig"+def); f.classList.remove("shake"); void f.offsetWidth; f.classList.add("shake"); }
+    else if(word === "슉!") sfx("whoosh");
+    else sfx("tick");
+
+    if(winner !== null){ G.score[winner]++; drawScore(); }
+
+    // 뿅뿅이가 하는 말
+    var timedOut = (c[0]===null) || (G.mode==="two" && c[1]===null);
+    if(timedOut) say("stuck", "화살표 하나를 3초 안에 꾹 눌러요!");
+    else if(G.mode === "cpu") say(winner === 0 ? "good" : "wrong");
+    else if(winner !== null) say("good", (winner===0?"1P":"2P")+" 1점!");
+
+    if(G.score[0] >= GOAL || G.score[1] >= GOAL){
+      later(endGame, 1600);
+    }else{
+      later(function(){ G.attacker = 1 - G.attacker; nextRound(false); }, 1900);
+    }
+  }
+
+  function endGame(){
+    var w = G.score[0] >= GOAL ? 0 : 1;
+    var other = G.mode==="cpu" ? "컴퓨터" : "2P";
+    $("winText").textContent = (w===0 ? "1P" : other) + " 승리!";
+    $("finalScore").textContent = "1P " + G.score[0] + " : " + G.score[1] + " " + other;
+    go("pResult");
+    sfx("win");
+    if(G.mode === "cpu" && w === 1) say("wrong");
+    else say("end");
+  }
+
+  /* ---------- 🧾 만든 기록 (receipt.json) ---------- */
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(ch){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]; }); }
+  function numOr(v, fmt){ return (v === null || v === undefined) ? "계산 중" : fmt(v); }
+  function showReceipt(r){
+    var h = '<h3>🧾 만든 기록</h3><div class="t">'+esc(r.title || "뿅망치 참참참 게임")+'</div>';
+    h += '<div class="row"><span>AI가 일한 시간</span><b>'+numOr(r.minutes,function(v){return v+"분";})+'</b></div>';
+    h += '<div class="row"><span>주고받은 글자 조각(토큰)</span><b>'+numOr(r.tokens,function(v){return v>=10000 ? Math.round(v/10000).toLocaleString("ko-KR")+"만 개" : v.toLocaleString("ko-KR")+"개";})+'</b></div>';
+    h += '<div class="row"><span>돈으로 치면</span><b>'+numOr(r.won,function(v){return "약 "+v.toLocaleString("ko-KR")+"원";})+'</b></div>';
+    h += '<div class="row"><span>고친 횟수</span><b>'+numOr(r.revisions,function(v){return v+"번";})+'</b></div>';
+    if(r.aiCouldNot && r.aiCouldNot.length){
+      h += '<h4>🙋 AI 혼자서는 못 해서 사람이 정한 것</h4><ul>';
+      r.aiCouldNot.forEach(function(x){ h += '<li>'+esc(x)+'</li>'; });
+      h += '</ul>';
+    }
+    if(r.costsMore && r.costsMore.length){
+      h += '<h4>💰 더 만들려면 돈·준비가 더 드는 것</h4><ul>';
+      r.costsMore.forEach(function(x){ h += '<li><b>'+esc(x.feature)+'</b> — '+esc(x.why)+'</li>'; });
+      h += '</ul>';
+    }
+    h += '<button type="button" class="close" id="rcptClose">닫기</button>';
+    $("rcptCard").innerHTML = h;
+    $("rcptModal").classList.add("on");
+  }
+  $("rcptBtn").addEventListener("click", function(){
+    fetch("receipt.json", {cache:"no-store"})
+      .then(function(res){ if(!res.ok) throw new Error(res.status); return res.json(); })
+      .then(showReceipt)
+      .catch(function(){ showReceipt({title:"뿅망치 참참참 게임", minutes:null, tokens:null, won:null, revisions:null}); });
+  });
+  $("rcptModal").addEventListener("click", function(e){
+    if(e.target.id === "rcptModal" || e.target.id === "rcptClose") $("rcptModal").classList.remove("on");
+  });
+
+  /* ---------- 시작 ---------- */
+  drawHome();
+  setTimeout(function(){ say("hello"); }, 400);
+})();
+</script>
+</body>
+</html>

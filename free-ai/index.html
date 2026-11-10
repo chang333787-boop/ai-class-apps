@@ -1,7 +1,488 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>free ai</title>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,"Malgun Gothic",sans-serif;background:#fff8ee;color:#2b2b2b;text-align:center}
-a.home{position:fixed;top:12px;left:12px;padding:10px 16px;border-radius:12px;background:#fff;border:2px solid #e6dccb;color:#2b2b2b;text-decoration:none;font-size:18px}
-.e{font-size:80px}h1{font-size:32px;margin:8px}</style></head>
-<body><a class="home" href="../">← 처음으로</a><div><div class="e">💬</div><h1>free ai</h1><p style="font-size:20px">만드는 중이에요!</p></div></body></html>
+<style>
+:root{
+  --bg:#f4f7fb; --panel:#ffffff; --side:#eaf1fb; --ink:#1f2937; --sub:#6b7280;
+  --line:#d6e0ee; --accent:#2563eb; --accent-soft:#dbeafe; --me:#2563eb; --ai:#ffffff;
+  --heart:#ef4444; --shadow:0 4px 0 #d6e0ee;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:system-ui,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:var(--bg);color:var(--ink);font-size:18px}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+.app{display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto 1fr;height:100vh;height:100dvh}
+
+/* 위쪽 띠 */
+.top{grid-column:1/3;display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--panel);border-bottom:2px solid var(--line)}
+.btn{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 14px;font-size:17px;text-decoration:none;color:var(--ink);white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;gap:4px}
+.btn:active{transform:translateY(2px)}
+.menu-btn{display:none}
+.logo{flex:1;text-align:center;font-weight:800;font-size:26px;letter-spacing:.5px}
+.logo small{display:block;font-size:12px;font-weight:600;color:var(--sub);letter-spacing:0}
+.hearts{font-size:17px;white-space:nowrap;font-weight:700;color:var(--heart)}
+.nick{border:none;background:none;font-size:17px;color:var(--sub);padding:8px 4px;min-height:44px}
+
+/* 왼쪽 메뉴 */
+.side{background:var(--side);border-right:2px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+.side .brand{font-weight:800;font-size:22px;padding:6px 8px}
+.side .new{background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px;font-size:18px;text-align:left;font-weight:700;box-shadow:var(--shadow)}
+.side h3{margin:12px 8px 0;font-size:15px;color:var(--sub)}
+.hist{background:none;border:none;text-align:left;padding:12px 10px;border-radius:12px;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--line)}
+.hist.on{background:#fff;font-weight:700}
+.side .empty{color:var(--sub);font-size:15px;padding:4px 10px}
+.side .nick-side{display:none;text-align:left}
+
+/* 가운데 */
+.main{display:flex;flex-direction:column;min-height:0;position:relative}
+.chat{flex:1;overflow-y:auto;padding:18px 16px 8px;display:flex;flex-direction:column;gap:12px}
+.hello{margin:auto;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px}
+.hello h2{font-size:clamp(26px,4vw,36px);margin:4px 0}
+.hello .mascot-big{width:min(260px,62vw)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip{border:2px solid var(--line);background:#fff;border-radius:999px;padding:10px 16px;font-size:17px;min-height:44px}
+.chip:active{background:var(--accent-soft)}
+.row{display:flex;gap:8px;align-items:flex-end;max-width:760px;width:100%;margin:0 auto}
+.row.me{justify-content:flex-end}
+.bubble{padding:12px 16px;border-radius:18px;max-width:78%;line-height:1.55;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}
+.me .bubble{background:var(--me);color:#fff;border-bottom-right-radius:6px}
+.ai .bubble{background:var(--ai);border:2px solid var(--line);border-bottom-left-radius:6px}
+.ai .face{width:40px;flex:none}
+.say{border:none;background:var(--accent-soft);border-radius:10px;padding:6px 10px;margin-left:6px;font-size:16px;vertical-align:middle;min-height:36px}
+.thinking{color:var(--sub);font-style:italic}
+
+/* 아래 입력창 */
+.bottom{padding:8px 16px 10px}
+.bottom .chips{margin:0 auto 8px;max-width:760px}
+.ask{display:flex;align-items:center;gap:8px;max-width:760px;margin:0 auto;background:#fff;border:3px solid #1f2937;border-radius:999px;padding:6px 6px 6px 20px}
+.ask input{flex:1;border:none;outline:none;font-size:19px;padding:10px 0;background:transparent;min-width:0}
+.send{width:52px;height:52px;border-radius:50%;border:3px solid #1f2937;background:#fff;font-size:24px;font-weight:800;flex:none}
+.send:disabled,.ask input:disabled{opacity:.45;cursor:not-allowed}
+.note{text-align:center;color:var(--sub);font-size:14px;margin-top:6px}
+
+/* 마스코트 말풍선 (오른쪽 아래) */
+.pop{position:absolute;right:14px;bottom:110px;display:flex;align-items:flex-end;gap:6px;pointer-events:none;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;z-index:5}
+.pop.show{opacity:1;transform:none}
+.pop .words{background:#fff;border:3px solid #1f2937;border-radius:16px;padding:10px 14px;font-size:20px;font-weight:800;margin-bottom:40px}
+.pop svg{width:120px}
+
+/* 창(모달) */
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+.modal.show{display:flex}
+.box{background:#fff;border-radius:22px;padding:22px;width:min(460px,100%);max-height:90vh;overflow-y:auto}
+.box h2{margin:0 0 12px;font-size:24px}
+.box input{width:100%;font-size:20px;padding:12px;border:2px solid var(--line);border-radius:12px}
+.box .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.box .go{background:var(--accent);color:#fff;border-color:var(--accent)}
+.rc dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0 0 12px;font-size:17px}
+.rc dt{color:var(--sub)}
+.rc dd{margin:0;font-weight:700}
+.rc h3{font-size:18px;margin:14px 0 6px}
+.rc ul{margin:0;padding-left:20px;line-height:1.6;font-size:16px}
+.rc li{margin-bottom:6px}
+
+/* 좁은 화면(크롬북 세로·태블릿) */
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .top{grid-column:1}
+  .menu-btn{display:inline-flex}
+  .side{position:fixed;top:0;left:0;bottom:0;width:240px;z-index:15;transform:translateX(-105%);transition:transform .2s;box-shadow:4px 0 20px rgba(0,0,0,.15)}
+  .side.open{transform:none}
+  .top{flex-wrap:wrap;row-gap:4px}
+  .logo{font-size:22px;order:-1;flex-basis:100%}
+  .logo small{display:none}
+  .btn{padding:8px 10px;font-size:16px}
+  .top .nick{display:none}
+  .side .nick-side{display:block}
+  .hearts{margin-left:auto}
+  body{overflow-x:hidden}
+  .pop{bottom:120px}
+  .pop svg{width:90px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="btn" href="../">← 처음으로</a>
+    <button class="btn menu-btn" id="menuBtn" aria-label="메뉴 열기">☰</button>
+    <div class="logo">free ai<small>누구든지 언제나 무엇이든 쉽고 편하게</small></div>
+    <span class="hearts" id="hearts" title="오늘 남은 질문 수"></span>
+    <button class="nick" id="nickBtn" title="이름 바꾸기"></button>
+    <button class="btn" id="receiptBtn">🧾 만든 기록</button>
+  </header>
+
+  <nav class="side" id="side">
+    <div class="brand">free ai</div>
+    <button class="nick nick-side" id="nickBtn2" title="이름 바꾸기"></button>
+    <button class="new" id="newBtn">✏️ 새 채팅</button>
+    <h3>내역</h3>
+    <div id="histList"></div>
+  </nav>
+
+  <main class="main">
+    <div class="chat" id="chat"></div>
+    <div class="bottom">
+      <div class="chips" id="stuckChips" hidden></div>
+      <form class="ask" id="askForm" autocomplete="off">
+        <input id="q" maxlength="80" placeholder="질문 쓰는데" aria-label="질문 쓰는 곳">
+        <button class="send" id="sendBtn" aria-label="보내기">↑</button>
+      </form>
+      <div class="note">지금은 연습용 AI예요 (정해진 대답만 해요) · 하루에 질문 10번</div>
+    </div>
+    <div class="pop" id="pop"><div class="words" id="popWords"></div><div id="popFace"></div></div>
+  </main>
+</div>
+
+<!-- 이름(별명) 창 -->
+<div class="modal" id="nickModal">
+  <form class="box" id="nickForm">
+    <h2>내 별명을 알려 줘!</h2>
+    <p style="margin:0 0 10px;color:var(--sub)">진짜 이름 말고 별명을 써 주세요. 이 기기에만 저장돼요.</p>
+    <input id="nickInput" maxlength="8" placeholder="예) 질문왕">
+    <div class="acts"><button type="submit" class="btn go">시작하기</button></div>
+  </form>
+</div>
+
+<!-- 만든 기록 창 -->
+<div class="modal" id="receiptModal">
+  <div class="box rc">
+    <h2>🧾 만든 기록</h2>
+    <div id="receiptBody">불러오는 중…</div>
+    <div class="acts"><button class="btn" id="receiptClose">닫기</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- 마스코트: 임시저장261104 14-22 (모니터) ---------- */
+var MASCOT_NAME = '임시저장261104 14-22';
+var LINES = {
+  hello: '어 안녕하세요',   // 처음 켰을 때 (원래 글씨 판독 확인 전 임시 문구)
+  good:  '어 잘했어',       // 잘했을 때: 질문해서 답을 받았을 때
+  wrong: '어 틀렸어',       // 틀렸을 때: 모르는 질문·빈칸
+  stuck: '어 막혔어',       // 막혔을 때: 20초 동안 아무것도 안 쓸 때
+  end:   '어 끝났어'        // 끝났을 때: 오늘 하트를 다 썼을 때
+};
+function mascotSVG(mood){
+  var eyes, mouth;
+  if(mood==='wrong'){ eyes='<path d="M70 70 l14 6 M136 76 l14 -6" stroke="#1f2937" stroke-width="5" stroke-linecap="round"/>'; mouth='<path d="M98 92 q12 -8 24 0" fill="none" stroke="#1f2937" stroke-width="5" stroke-linecap="round"/>'; }
+  else if(mood==='stuck'){ eyes='<circle cx="78" cy="74" r="5" fill="#1f2937"/><circle cx="142" cy="74" r="5" fill="#1f2937"/>'; mouth='<path d="M98 92 h24" stroke="#1f2937" stroke-width="5" stroke-linecap="round"/><text x="160" y="66" font-size="22" font-weight="800" fill="#1f2937">?</text>'; }
+  else if(mood==='end'){ eyes='<path d="M70 76 q8 -10 16 0 M134 76 q8 -10 16 0" fill="none" stroke="#1f2937" stroke-width="5" stroke-linecap="round"/>'; mouth='<path d="M94 88 q16 16 32 0 z" fill="#1f2937"/>'; }
+  else { eyes='<circle cx="78" cy="74" r="6" fill="#1f2937"/><circle cx="142" cy="74" r="6" fill="#1f2937"/>'; mouth='<path d="M96 88 q14 12 28 0" fill="none" stroke="#1f2937" stroke-width="5" stroke-linecap="round"/>'; }
+  return '<svg viewBox="0 0 220 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="마스코트 '+MASCOT_NAME+'">'+
+    '<rect x="10" y="10" width="200" height="130" rx="10" fill="#cfe5ff" stroke="#1f2937" stroke-width="7"/>'+
+    '<rect x="22" y="22" width="176" height="106" rx="6" fill="#e8f3ff"/>'+
+    '<text x="110" y="50" text-anchor="middle" font-size="26" font-weight="800" fill="#1f2937" font-family="system-ui,sans-serif">free AI</text>'+
+    eyes+mouth+
+    '<text x="110" y="122" text-anchor="middle" font-size="12" font-weight="700" fill="#374151" font-family="system-ui,sans-serif">그대신 사용량은 있다</text>'+
+    '<path d="M30 150 q40 22 80 0 q40 22 80 0" fill="none" stroke="#1f2937" stroke-width="4" stroke-linecap="round"/>'+
+    '<path d="M92 140 L128 192 M128 140 L92 192" stroke="#1f2937" stroke-width="12" stroke-linecap="round"/>'+
+    '</svg>';
+}
+
+/* ---------- 저장 (부품 15: 저장 = 기억하기) ---------- */
+var KEY = 'freeai.v1';
+var MAX_CHATS = 5, DAILY = 10;
+function today(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function load(){
+  var s=null;
+  try{ s=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
+  if(!s || typeof s!=='object') s={};
+  if(!Array.isArray(s.chats)) s.chats=[];
+  if(!s.hearts || s.hearts.date!==today()) s.hearts={date:today(), left:DAILY};
+  return s;
+}
+var S = load();
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function current(){ for(var i=0;i<S.chats.length;i++) if(S.chats[i].id===S.cur) return S.chats[i]; return null; }
+
+/* ---------- 연습용 AI 대답 (키 없음, 기기 안에서만) ---------- */
+var WORDS = {
+  '분수':'전체를 똑같이 나눈 것 중 몇 개인지 나타내는 수야. 예) 피자 4조각 중 1조각은 4분의 1.',
+  '소수':'0.5처럼 점(소수점)을 찍어서 1보다 작은 부분을 나타내는 수야.',
+  '각도':'두 선이 벌어진 정도야. 단위는 도(°)를 써.',
+  '직각':'90도인 각이야. 공책 모서리가 직각이야.',
+  '삼각형':'선분 3개로 둘러싸인 도형이야. 각도 3개, 꼭짓점도 3개!',
+  '사각형':'선분 4개로 둘러싸인 도형이야.',
+  '수직':'두 직선이 만나서 직각을 이루는 거야.',
+  '평행':'아무리 길게 늘여도 서로 만나지 않는 두 직선이야.',
+  '꺾은선그래프':'시간에 따라 변하는 모습을 점을 이은 선으로 나타낸 그래프야.',
+  '막대그래프':'크기를 막대 길이로 비교하는 그래프야.',
+  '그림자':'빛이 물체에 막혀서 뒤쪽에 생기는 어두운 부분이야.',
+  '화산':'땅속의 뜨거운 마그마가 밖으로 나오는 산이야.',
+  '지진':'땅이 흔들리는 거야. 책상 밑에 들어가 머리를 보호해!',
+  '증발':'물이 표면에서 수증기로 날아가는 거야. 빨래가 마르는 것도 증발!',
+  '응결':'수증기가 차가운 곳에 닿아 물방울이 되는 거야.',
+  '혼합물':'여러 가지 물질이 섞여 있는 거야. 예) 콩과 쌀이 섞인 것.',
+  '촌락':'논밭, 바다, 산과 가까이 사는 마을이야.',
+  '도시':'사람과 건물이 많고 교통이 편리한 곳이야.',
+  '민주주의':'모두가 나라의 주인이 되어 함께 결정하는 거야.',
+  '속담':'옛날부터 전해 오는 짧고 지혜로운 말이야.',
+  '인공지능':'사람처럼 배우고 생각하는 것처럼 보이게 만든 컴퓨터 기술이야. 나는 연습용이라 정해진 대답만 해!',
+  'ai':'인공지능을 영어로 줄인 말이야. 나는 연습용 AI야!'
+};
+var JOKES = [
+  '왕이 넘어지면? 킹콩! 어 웃었어?',
+  '세상에서 가장 뜨거운 과일은? 천도복숭아!',
+  '바나나가 웃으면? 바나나킥!',
+  '소가 웃으면? 우하하!',
+  '가장 무서운 바다는? 공포해!',
+  '세상에서 제일 쉬운 숫자는? 190000. 십구만(쉽구만)!',
+  '오리가 얼면? 언덕!',
+  '물고기 중에 가장 학벌이 좋은 물고기는? 고등어!'
+];
+var TIPS = [
+  '받아쓰기는 틀린 낱말만 공책에 3번씩 써 봐. 어 금방 외워져.',
+  '숙제는 쉬운 것부터 하나 끝내고 시작하면 힘이 나.',
+  '정리정돈은 "제자리 놀이"로! 물건마다 집을 정해 줘.',
+  '집중이 안 되면 10분 공부하고 1분 쉬어 봐.',
+  '모르는 낱말은 국어사전에서 찾아보고, 뜻을 내 말로 써 봐.'
+];
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function has(q, list){ for(var i=0;i<list.length;i++) if(q.indexOf(list[i])>=0) return true; return false; }
+function fmtNum(n){ return Math.round(n*1000)/1000; }
+
+function answer(raw){
+  var q = raw.trim().toLowerCase().replace(/\s+/g,' ');
+  if(!q) return null;
+  var nos = q.replace(/\s/g,'');
+  if(/\d{2,3}-?\d{3,4}-?\d{4}/.test(nos)) return {text:'전화번호 같은 건 여기에 쓰지 마! 내 정보는 소중하니까.', known:true};
+  if(has(nos,['바보','멍청','씨발','시발','개새','병신','죽어','꺼져'])) return {text:'어 그런 말은 마음이 아파. 고운 말로 다시 물어봐 줄래?', known:true};
+
+  // 구구단: "3단"
+  var m = nos.match(/([1-9])단/);
+  if(m){
+    var n=+m[1], out=[]; for(var i=1;i<=9;i++) out.push(n+' × '+i+' = '+(n*i));
+    return {text:'어 '+n+'단이야!\n'+out.join('\n'), known:true};
+  }
+  // 계산
+  var e = nos.replace(/더하기|플러스/g,'+').replace(/빼기|마이너스/g,'-').replace(/곱하기|×|x|\*/g,'*').replace(/나누기|÷|\//g,'/');
+  m = e.match(/(\d+(?:\.\d+)?)([+\-*\/])(\d+(?:\.\d+)?)/);
+  if(m){
+    var a=+m[1], b=+m[3], op=m[2], r;
+    if(op==='/' && b===0) return {text:'어 0으로는 나눌 수 없어!', known:true};
+    r = op==='+'?a+b : op==='-'?a-b : op==='*'?a*b : a/b;
+    var sym = {'+':'+','-':'−','*':'×','/':'÷'}[op];
+    return {text:'어 '+m[1]+' '+sym+' '+m[3]+' = '+fmtNum(r)+' 이야!', known:true};
+  }
+  if(has(nos,['안녕','하이','hello','hi','반가워'])) return {text:'어 안녕! 나는 free ai야. 궁금한 걸 물어봐.', known:true};
+  if(has(nos,['누구','너이름','이름이뭐','이름뭐'])) return {text:'어 나는 '+MASCOT_NAME+'야. 연습용 AI라서 정해진 대답만 할 수 있어.', known:true};
+  if(has(nos,['고마워','고맙','감사'])) return {text:'어 별말씀을! 또 물어봐.', known:true};
+  if(has(nos,['뭐할수','할수있','뭘할수','도움말','사용법'])) return {text:'어 나는 이런 걸 할 수 있어!\n· 인사하기\n· 오늘 날짜·요일·시간\n· 계산 (예: 12 곱하기 4)\n· 구구단 (예: 7단)\n· 낱말 뜻 (예: 분수가 뭐야?)\n· 아재개그\n· 공부 팁', known:true};
+  var d=new Date(), wk='일월화수목금토'.charAt(d.getDay());
+  if(has(nos,['몇시','시간','시각'])) return {text:'어 지금은 '+d.getHours()+'시 '+d.getMinutes()+'분이야.', known:true};
+  if(has(nos,['요일'])) return {text:'어 오늘은 '+wk+'요일이야.', known:true};
+  if(has(nos,['날짜','며칠','몇월','오늘'])) return {text:'어 오늘은 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 '+wk+'요일이야.', known:true};
+  if(has(nos,['날씨'])) return {text:'어 나는 바깥을 못 봐서 날씨는 몰라. 창문을 한번 봐!', known:true};
+  if(has(nos,['개그','농담','웃긴','재밌는','재미있는','수수께끼','퀴즈'])) return {text:pick(JOKES), known:true};
+  if(has(nos,['공부','받아쓰기','숙제','정리','집중','외우'])) return {text:pick(TIPS), known:true};
+  for(var w in WORDS){ if(nos.indexOf(w)>=0) return {text:'어 \''+w+'\'(이)란 '+WORDS[w], known:true}; }
+  return {text:'어 그건 아직 몰라. 나는 연습용 AI라서 정해진 것만 알아. 선생님께 물어봐!\n("뭐 할 수 있어?"라고 물으면 내가 아는 걸 알려 줄게.)', known:false};
+}
+
+/* ---------- 화면 ---------- */
+var $ = function(id){ return document.getElementById(id); };
+var chatEl=$('chat'), qEl=$('q'), sendBtn=$('sendBtn');
+var EXAMPLES = ['뭐 할 수 있어?','12 곱하기 4는?','아재개그 해 줘','분수가 뭐야?'];
+
+function chipsHTML(list, box){
+  box.innerHTML='';
+  list.forEach(function(t){
+    var b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=t;
+    b.addEventListener('click', function(){ ask(t); });
+    box.appendChild(b);
+  });
+}
+
+function renderHearts(){
+  var left=S.hearts.left;
+  $('hearts').textContent = '❤️ '+left+'/'+DAILY;
+  var out = left<=0;
+  qEl.disabled=out; sendBtn.disabled=out;
+  qEl.placeholder = out ? '오늘은 끝! 내일 다시 하트가 채워져요' : '질문 쓰는데';
+}
+
+function renderNick(){ $('nickBtn').textContent = $('nickBtn2').textContent = '('+(S.nick||'친구')+')'; }
+
+function renderHist(){
+  var box=$('histList'); box.innerHTML='';
+  var list=S.chats.filter(function(c){ return c.msgs.length; });
+  if(!list.length){ var p=document.createElement('div'); p.className='empty'; p.textContent='아직 없어요'; box.appendChild(p); return; }
+  list.forEach(function(c){
+    var b=document.createElement('button'); b.className='hist'+(c.id===S.cur?' on':''); b.textContent='💬 '+c.title;
+    b.addEventListener('click', function(){ S.cur=c.id; save(); closeSide(); renderAll(); });
+    box.appendChild(b);
+  });
+}
+
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  var u=new SpeechSynthesisUtterance(text.replace(/×/g,' 곱하기 ').replace(/÷/g,' 나누기 ').replace(/−/g,' 빼기 '));
+  u.lang='ko-KR'; u.rate=0.95;
+  speechSynthesis.speak(u);
+}
+
+function bubble(who, text, thinking){
+  var row=document.createElement('div'); row.className='row '+who;
+  if(who==='ai'){ var f=document.createElement('div'); f.className='face'; f.innerHTML=mascotSVG('hello'); row.appendChild(f); }
+  var b=document.createElement('div'); b.className='bubble'+(thinking?' thinking':''); b.textContent=text;
+  if(who==='ai' && !thinking && ('speechSynthesis' in window)){
+    var s=document.createElement('button'); s.type='button'; s.className='say'; s.textContent='🔊'; s.setAttribute('aria-label','읽어 주기');
+    s.addEventListener('click', function(){ speak(text); });
+    b.appendChild(s);
+  }
+  row.appendChild(b); chatEl.appendChild(row);
+  chatEl.scrollTop=chatEl.scrollHeight;
+  return row;
+}
+
+function renderChat(){
+  chatEl.innerHTML='';
+  var c=current();
+  if(!c || !c.msgs.length){
+    var h=document.createElement('div'); h.className='hello';
+    h.innerHTML='<div class="mascot-big">'+mascotSVG('hello')+'</div><h2>무엇이 필요한가요.</h2><div class="chips" id="helloChips"></div>';
+    chatEl.appendChild(h);
+    chipsHTML(EXAMPLES, $('helloChips'));
+    return;
+  }
+  c.msgs.forEach(function(m){ bubble(m.who, m.text); });
+}
+
+function renderAll(){ renderHearts(); renderNick(); renderHist(); renderChat(); }
+
+/* 마스코트 말풍선 */
+var popTimer=null;
+function mascotSay(kind){
+  $('popWords').textContent=LINES[kind];
+  $('popFace').innerHTML=mascotSVG(kind);
+  var p=$('pop'); p.classList.add('show');
+  clearTimeout(popTimer); popTimer=setTimeout(function(){ p.classList.remove('show'); }, kind==='end'?4000:2600);
+}
+
+/* 질문하기 */
+var busy=false;
+function ask(text){
+  if(busy) return;
+  text=(text||'').trim();
+  hideStuck();
+  if(!text){ mascotSay('wrong'); qEl.focus(); return; }
+  if(S.hearts.left<=0){ mascotSay('end'); return; }
+  var c=current();
+  if(!c){ c={id:Date.now(), title:'', msgs:[]}; S.chats.unshift(c); S.cur=c.id; }
+  if(!c.msgs.length){ chatEl.innerHTML=''; c.title=text.length>12?text.slice(0,12)+'…':text; }
+  // 이 대화를 맨 위로, 5개까지만 기억
+  S.chats=S.chats.filter(function(x){ return x.id!==c.id; }); S.chats.unshift(c);
+  if(S.chats.length>MAX_CHATS) S.chats=S.chats.slice(0,MAX_CHATS);
+  c.msgs.push({who:'me', text:text});
+  S.hearts.left--;
+  save(); renderHearts(); renderHist();
+  bubble('me', text);
+  qEl.value='';
+  busy=true;
+  var t=bubble('ai','생각 중…',true);
+  setTimeout(function(){
+    busy=false;
+    t.remove();
+    var r=answer(text);
+    c.msgs.push({who:'ai', text:r.text}); save();
+    bubble('ai', r.text);
+    if(S.hearts.left<=0){ renderHearts(); setTimeout(function(){ mascotSay('end'); }, 300); }
+    else mascotSay(r.known?'good':'wrong');
+    resetIdle();
+  }, 600);
+}
+
+$('askForm').addEventListener('submit', function(e){ e.preventDefault(); ask(qEl.value); });
+
+/* 새 채팅 */
+$('newBtn').addEventListener('click', function(){
+  S.cur=null; save();
+  closeSide(); renderAll(); qEl.focus();
+});
+
+/* 막혔을 때: 20초 동안 아무것도 안 쓰면 */
+var idleTimer=null;
+function hideStuck(){ $('stuckChips').hidden=true; }
+function resetIdle(){
+  clearTimeout(idleTimer);
+  idleTimer=setTimeout(function(){
+    if(S.hearts.left<=0 || qEl.value.trim() || document.querySelector('.modal.show')) { resetIdle(); return; }
+    mascotSay('stuck');
+    var c=current();
+    if(c && c.msgs.length){ chipsHTML(EXAMPLES, $('stuckChips')); $('stuckChips').hidden=false; }
+  }, 20000);
+}
+['input','pointerdown','keydown'].forEach(function(ev){ document.addEventListener(ev, resetIdle, {passive:true}); });
+
+/* 왼쪽 메뉴 (좁은 화면) */
+function closeSide(){ $('side').classList.remove('open'); }
+$('menuBtn').addEventListener('click', function(){ $('side').classList.toggle('open'); });
+chatEl.addEventListener('click', closeSide);
+
+/* 별명 */
+function openNick(){ $('nickInput').value=S.nick||''; $('nickModal').classList.add('show'); setTimeout(function(){ $('nickInput').focus(); },50); }
+$('nickBtn').addEventListener('click', openNick);
+$('nickBtn2').addEventListener('click', function(){ closeSide(); openNick(); });
+$('nickForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var v=$('nickInput').value.trim().slice(0,8);
+  var first=!S.nick;
+  S.nick=v||'친구'; save(); renderNick();
+  $('nickModal').classList.remove('show');
+  if(first) setTimeout(function(){ mascotSay('hello'); }, 200);
+  qEl.focus();
+});
+
+/* 🧾 만든 기록 */
+function fmtTokens(t){ return t>=10000 ? (Math.round(t/1000)/10)+'만 개' : t.toLocaleString('ko-KR')+'개'; }
+function renderReceipt(r){
+  var body=$('receiptBody'); body.innerHTML='';
+  var wait='계산 중';
+  var dl=document.createElement('dl');
+  [['작품',r.title||'free ai'],
+   ['AI가 일한 시간', r.minutes==null?wait:r.minutes+'분'],
+   ['주고받은 글자 조각(토큰)', r.tokens==null?wait:fmtTokens(r.tokens)],
+   ['돈으로 치면', r.won==null?wait:'약 '+Number(r.won).toLocaleString('ko-KR')+'원'],
+   ['고친 횟수', (r.revisions==null?wait:r.revisions+'번')]
+  ].forEach(function(p){ var dt=document.createElement('dt'); dt.textContent=p[0]; var dd=document.createElement('dd'); dd.textContent=p[1]; dl.appendChild(dt); dl.appendChild(dd); });
+  body.appendChild(dl);
+  function list(title, items, fn){
+    if(!items || !items.length) return;
+    var h=document.createElement('h3'); h.textContent=title; body.appendChild(h);
+    var ul=document.createElement('ul');
+    items.forEach(function(it){ var li=document.createElement('li'); fn(li,it); ul.appendChild(li); });
+    body.appendChild(ul);
+  }
+  list('🤖 AI 혼자서는 못 해서 사람이 정한 것', r.aiCouldNot, function(li,it){ li.textContent=it; });
+  list('💰 더 하고 싶지만 돈·준비가 더 드는 것', r.costsMore, function(li,it){
+    var b=document.createElement('b'); b.textContent=(it.feature||'')+' — '; li.appendChild(b);
+    li.appendChild(document.createTextNode(it.why||''));
+  });
+}
+$('receiptBtn').addEventListener('click', function(){
+  $('receiptModal').classList.add('show');
+  $('receiptBody').textContent='불러오는 중…';
+  fetch('receipt.json',{cache:'no-store'})
+    .then(function(res){ if(!res.ok) throw new Error(res.status); return res.json(); })
+    .then(renderReceipt)
+    .catch(function(){ $('receiptBody').textContent='기록을 불러오지 못했어요. 인터넷 주소(웹사이트)로 열면 보여요.'; });
+});
+$('receiptClose').addEventListener('click', function(){ $('receiptModal').classList.remove('show'); });
+$('receiptModal').addEventListener('click', function(e){ if(e.target===this) this.classList.remove('show'); });
+
+/* 시작 */
+renderAll();
+if(!S.nick) openNick(); else setTimeout(function(){ mascotSay('hello'); }, 300);
+resetIdle();
+})();
+</script>
+</body>
+</html>
