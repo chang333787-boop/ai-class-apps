@@ -220,20 +220,31 @@ h1,h2,h3,.round{font-family:var(--round);font-weight:400}
 .modal h3{font-size:21px;margin:16px 0 6px}
 .modal ul{margin:0;padding-left:22px;font-size:18px;line-height:1.6}
 /* 레벨 업 */
-#levelUp .box{text-align:center;overflow:hidden;max-width:520px;padding:26px 22px}
+#levelUp .box{text-align:center;overflow-y:auto;max-width:520px;padding:26px 22px}
+.rays-wrap{position:absolute;inset:0;overflow:hidden;border-radius:20px;z-index:0}
 .rays{position:absolute;inset:-50%;background:repeating-conic-gradient(#fff3c4 0 10deg,#fff 10deg 20deg);animation:rays 8s linear infinite;z-index:0}
 @keyframes rays{to{transform:rotate(360deg)}}
-#levelUp .in{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:10px}
+#levelUp .in,#rebirth .in{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:10px}
+#rebirth .box{text-align:center;overflow-y:auto;max-width:520px;padding:26px 22px}
+.rays-violet{background:repeating-conic-gradient(#efe4ff 0 10deg,#fff 10deg 20deg)}
+.rb-title{font-family:var(--round);font-size:46px;color:#7a4fd6;text-shadow:3px 3px 0 #fff,6px 6px 0 #ffd23a;animation:pop .6s cubic-bezier(.3,1.8,.5,1)}
+.rb-text{font-size:21px;line-height:1.6;font-family:var(--round)}
+#rbCherry{width:120px;height:150px}
+.rebirth-btn{background:linear-gradient(90deg,#9b6ad6,#e2384d);box-shadow:0 5px 0 #6a3fb0;font-size:20px;padding:10px 20px;margin-top:6px;animation:glow 1.6s ease-in-out infinite}
+@keyframes glow{50%{filter:brightness(1.15);transform:scale(1.04)}}
+#closetRebirth{margin-bottom:10px}
+.item.special:not(.lock){border-color:#c7a2ff}
+.rb-stars{color:#7a4fd6;font-family:var(--round)}
 .lu-title{font-family:var(--round);font-size:54px;color:var(--cherry);text-shadow:3px 3px 0 #fff,6px 6px 0 var(--gold);animation:pop .6s cubic-bezier(.3,1.8,.5,1)}
 @keyframes pop{from{transform:scale(.2)}}
 .lu-num{font-family:var(--round);font-size:30px;display:flex;align-items:center;gap:12px}
 .lu-num .n{display:inline-block;background:var(--cherry);color:#fff;border-radius:16px;padding:2px 16px;font-size:44px;min-width:70px}
 .lu-num .n.roll{animation:roll .5s ease}
 @keyframes roll{0%{transform:translateY(0) scale(1)}45%{transform:translateY(-30px) scale(.6);opacity:0}55%{transform:translateY(30px) scale(.6);opacity:0}100%{transform:none;opacity:1}}
-#luCherry{width:150px;height:185px}
-.lu-items{display:flex;gap:10px;justify-content:center}
-.lu-items span{background:#fff;border:3px solid var(--ink);border-radius:16px;width:68px;height:68px;display:grid;place-items:center;animation:pop .5s cubic-bezier(.3,1.8,.5,1) backwards}
-.lu-items svg{width:48px;height:48px}
+#luCherry{width:120px;height:150px}
+.lu-items{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;max-width:420px}
+.lu-items span{background:#fff;border:3px solid var(--ink);border-radius:14px;width:56px;height:56px;display:grid;place-items:center;animation:pop .5s cubic-bezier(.3,1.8,.5,1) backwards}
+.lu-items svg{width:40px;height:40px}
 .toast{position:fixed;left:50%;top:72px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:16px;
   font-size:20px;z-index:60;opacity:0;transition:opacity .3s;pointer-events:none;text-align:center;max-width:90vw;font-family:var(--round)}
 .toast.on{opacity:1}
@@ -363,6 +374,7 @@ h1,h2,h3,.round{font-family:var(--round);font-weight:400}
       <h2>체리의 옷장</h2>
       <div class="mascot bob" id="closetCherry"></div>
       <div class="bubble up" id="closetBubble"></div>
+      <div id="closetRebirth"></div>
       <button class="go" id="closetBack" type="button">게임판으로</button>
     </div>
     <div id="racks"></div>
@@ -378,7 +390,7 @@ h1,h2,h3,.round{font-family:var(--round);font-weight:400}
 <!-- 레벨 업 -->
 <div class="modal" id="levelUp" role="dialog" aria-modal="true" aria-label="레벨 업">
   <div class="box">
-    <div class="rays"></div>
+    <div class="rays-wrap"><div class="rays"></div></div>
     <div class="in">
       <div class="lu-title">레벨 업!</div>
       <div class="mascot" id="luCherry"></div>
@@ -390,6 +402,14 @@ h1,h2,h3,.round{font-family:var(--round);font-weight:400}
         <button class="ghost" type="button" id="luClose">계속하기</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- 환생하기 -->
+<div class="modal" id="rebirth" role="dialog" aria-modal="true" aria-label="환생하기">
+  <div class="box">
+    <div class="rays-wrap"><div class="rays rays-violet"></div></div>
+    <div class="in" id="rbIn"></div>
   </div>
 </div>
 
@@ -627,26 +647,100 @@ const PIECES = {
   crown: () => `<g transform="translate(100 44)"><path d="M-22 6 L-22 -12 L-11 -2 L0 -18 L11 -2 L22 -12 L22 6 Z" fill="#ffc83a" ${OL3}/><circle cx="0" cy="0" r="3.5" fill="#e2384d"/><circle cx="-12" cy="2" r="2.5" fill="#4f8ad9"/><circle cx="12" cy="2" r="2.5" fill="#4f8ad9"/></g>`,
   book: () => `<g transform="translate(160 64) rotate(12)"><rect x="-12" y="-15" width="24" height="30" rx="3" fill="#4f8ad9" ${OL3}/><line x1="-6" y1="-15" x2="-6" y2="15" ${OL3}/></g>`,
   balloon: () => `<path d="M153 78 Q160 50 166 30" fill="none" stroke="${INK}" stroke-width="2"/><ellipse cx="168" cy="14" rx="15" ry="18" fill="#ffd23a" ${OL3}/><path d="M164 32 l4 -4 l4 4 Z" fill="#ffd23a" ${OL3}/>`,
-  wand: () => `<line x1="152" y1="84" x2="166" y2="52" stroke="${INK}" stroke-width="5" stroke-linecap="round"/><path d="${starPath(168, 46, 13)}" fill="#ffd23a" ${OL3}/>`
+  wand: () => `<line x1="152" y1="84" x2="166" y2="52" stroke="${INK}" stroke-width="5" stroke-linecap="round"/><path d="${starPath(168, 46, 13)}" fill="#ffd23a" ${OL3}/>`,
+  heartpin: () => `<path transform="translate(126 54) scale(1.25)" d="${HEART}" fill="#ff5b7a" ${OL3}/><circle cx="122" cy="44" r="2.5" fill="#fff"/>`,
+  catears: () => `<path d="M70 58 L72 26 L94 46 Z M130 58 L128 26 L106 46 Z" fill="#fff" ${OL3}/><path d="M75 50 L76 34 L87 45 Z M125 50 L124 34 L113 45 Z" fill="#ffb3c4"/>`,
+  starband: () => `<path d="M66 60 Q100 26 134 60" fill="none" stroke="${INK}" stroke-width="9" stroke-linecap="round"/><path d="M66 60 Q100 26 134 60" fill="none" stroke="#9b6ad6" stroke-width="5" stroke-linecap="round"/>
+    <path d="${starPath(100, 38, 12)}" fill="#ffd23a" ${OL3}/><path d="${starPath(78, 48, 8)}" fill="#ffd23a" ${OL3}/><path d="${starPath(122, 48, 8)}" fill="#ffd23a" ${OL3}/>`,
+  candy: () => `<line x1="152" y1="84" x2="160" y2="56" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><line x1="152" y1="84" x2="160" y2="56" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="162" cy="46" r="13" fill="#ff8fc8" ${OL3}/><path d="M162 46 m-7 0 a7 7 0 1 1 7 7 a4 4 0 1 1 -4 -4" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`,
+  sunflower: () => { let p = ""; for(let i = 0; i < 10; i++){ const a = i * 36 * Math.PI / 180; p += `<ellipse cx="${(164 + Math.cos(a) * 11).toFixed(1)}" cy="${(38 + Math.sin(a) * 11).toFixed(1)}" rx="6" ry="4" transform="rotate(${i * 36} ${(164 + Math.cos(a) * 11).toFixed(1)} ${(38 + Math.sin(a) * 11).toFixed(1)})" fill="#ffd23a" stroke="${INK}" stroke-width="2"/>`; }
+    return `<path d="M152 84 Q158 64 163 46" fill="none" stroke="#3a9a4a" stroke-width="5" stroke-linecap="round"/><path d="M157 66 q8 -8 14 -2 q-8 6 -14 2z" fill="#3a9a4a" stroke="${INK}" stroke-width="1.5"/>${p}<circle cx="164" cy="38" r="7" fill="#7a4a26" ${OL3}/>`; },
+  umbrella: () => `<path d="M153 80 L162 30" stroke="${INK}" stroke-width="4" stroke-linecap="round"/><path d="M153 80 q-2 8 -8 6" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+    <path d="M138 30 Q163 0 188 30 Q180 25 172 30 Q163 25 154 30 Q146 25 138 30 Z" fill="#ffd23a" ${OL3}/>`,
+  halo: () => `<ellipse cx="100" cy="32" rx="26" ry="8" fill="none" stroke="${INK}" stroke-width="9"/><ellipse cx="100" cy="32" rx="26" ry="8" fill="none" stroke="#ffe36b" stroke-width="5"/>
+    <path d="${starPath(126, 22, 5)}" fill="#fff6a8" class="twinkle"/><path d="${starPath(74, 24, 4)}" fill="#fff6a8" class="twinkle"/>`,
+  goldcherry: () => `<path d="M153 78 Q156 62 160 50" fill="none" stroke="${INK}" stroke-width="3"/>
+    <g transform="translate(162 44) scale(1.7)"><path d="M0 -14 Q-2 -4 -6 2 M0 -14 Q4 -4 6 3" stroke="#2f7a3a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M0 -14 q7 -7 14 -2 q-7 5 -14 2z" fill="#3a9a4a" stroke="${INK}" stroke-width="1.2"/>
+    <circle cx="-6" cy="5" r="6.5" fill="#ffcf3a" stroke="${INK}" stroke-width="1.8"/><circle cx="6" cy="6" r="6.5" fill="#ffcf3a" stroke="${INK}" stroke-width="1.8"/>
+    <circle cx="-8" cy="3" r="2" fill="#fff"/><circle cx="4" cy="4" r="2" fill="#fff"/></g>`
 };
+const HEART = "M0 8 C-14 -2 -12 -14 -4 -14 C0 -14 0 -10 0 -8 C0 -10 0 -14 4 -14 C12 -14 14 -2 0 8Z";
+/* 옷 무늬 — 옷 모양 안에만 보이게 */
+const DRESS = "M80 128 L120 128 L144 222 L56 222 Z";
+let UID = 0;
+function patternShapes(pat){
+  let s = "";
+  if(pat === "dots"){
+    for(let y = 138, r = 0; y < 222; y += 13, r++) for(let x = 56 + (r % 2) * 6; x < 146; x += 13) s += `<circle cx="${x}" cy="${y}" r="3.2" fill="#fff" opacity=".8"/>`;
+  }else if(pat === "stripes"){
+    for(let y = 142; y < 222; y += 16) s += `<rect x="50" y="${y}" width="100" height="6" fill="#fff" opacity=".75"/>`;
+  }else if(pat === "stars"){
+    [[88,148],[114,180],[80,198],[124,208],[100,214],[110,144]].forEach(p => s += `<path d="${starPath(p[0], p[1], 6.5)}" fill="#fff6a8" stroke="${INK}" stroke-width="1.5"/>`);
+  }else if(pat === "hearts"){
+    [[88,150],[114,182],[80,200],[124,208],[100,214],[112,146]].forEach(p => s += `<path transform="translate(${p[0]} ${p[1]}) scale(.5)" d="${HEART}" fill="#ff5b7a" stroke="#fff" stroke-width="3"/>`);
+  }
+  return s;
+}
+function dressSVG(color, pat){
+  const id = "dc" + (++UID);
+  let bands = "";
+  if(color === "rainbow"){
+    ["#ff7b8a", "#ffb35c", "#ffe27a", "#9be3a0", "#8fd3ff", "#c7a2ff"].forEach((c, i) => bands += `<rect x="50" y="${128 + i * 16}" width="100" height="16" fill="${c}"/>`);
+    color = "#fff";
+  }
+  const pattern = pat && pat !== "none" ? patternShapes(pat) : "";
+  const inner = bands || pattern ? `<g clip-path="url(#${id})">${bands}${pattern}</g>` : "";
+  return `<clipPath id="${id}"><path d="${DRESS}"/></clipPath><path d="${DRESS}" fill="${color}"/>${inner}<path d="${DRESS}" fill="none" ${OL}/>`;
+}
 const CLOSET = {
   color:{name:"👗 옷 색", list:[
     {id:"pink", label:"분홍", fill:"#ff9fb2", lv:1},
     {id:"sky", label:"하늘", fill:"#8fd3ff", lv:2},
-    {id:"violet", label:"보라", fill:"#c7a2ff", lv:4}]},
+    {id:"green", label:"초록", fill:"#9be3a0", lv:2},
+    {id:"yellow", label:"노랑", fill:"#ffe27a", lv:3},
+    {id:"violet", label:"보라", fill:"#c7a2ff", lv:4},
+    {id:"red", label:"체리 빨강", fill:"#ff6b7d", lv:5},
+    {id:"rainbow", label:"무지개", fill:"rainbow", lv:99, rb:1}]},
+  pattern:{name:"🌈 옷 무늬", list:[
+    {id:"none", label:"없음", lv:1},
+    {id:"dots", label:"땡땡이", lv:2},
+    {id:"stripes", label:"줄무늬", lv:3},
+    {id:"stars", label:"별", lv:4},
+    {id:"hearts", label:"하트", lv:5}]},
+  hair:{name:"💇 머리색", list:[
+    {id:"brown", label:"갈색", fill:"#5b3a2e", light:"#7a5040", lv:1},
+    {id:"black", label:"검정", fill:"#2a2230", light:"#4a4258", lv:1},
+    {id:"orange", label:"주황", fill:"#d9772b", light:"#f0a060", lv:1},
+    {id:"gold", label:"금색", fill:"#e8b931", light:"#f7da74", lv:2},
+    {id:"pinkhair", label:"분홍", fill:"#f08bb0", light:"#f9b8d0", lv:3},
+    {id:"galaxy", label:"은하수", fill:"#4b3fa8", light:"#b7a8ff", lv:99, rb:2}]},
   hat:{name:"🎀 머리 장식", list:[
     {id:"none", label:"없음", lv:1},
     {id:"ribbon", label:"리본", lv:1, vb:"72 26 56 36"},
     {id:"flower", label:"꽃핀", lv:2, vb:"100 26 48 48"},
-    {id:"crown", label:"왕관", lv:3, vb:"72 20 56 36"}]},
+    {id:"heartpin", label:"하트핀", lv:2, vb:"106 30 40 40"},
+    {id:"crown", label:"왕관", lv:3, vb:"72 20 56 36"},
+    {id:"catears", label:"고양이 귀", lv:4, vb:"64 20 72 44"},
+    {id:"starband", label:"별 머리띠", lv:5, vb:"60 22 80 44"},
+    {id:"halo", label:"천사 고리", lv:99, rb:1, vb:"68 16 64 36"}]},
   item:{name:"✋ 손에 드는 것", list:[
     {id:"none", label:"없음", lv:1},
     {id:"book", label:"책", lv:1, vb:"138 42 44 44"},
+    {id:"candy", label:"막대사탕", lv:2, vb:"140 26 40 62"},
     {id:"balloon", label:"풍선", lv:3, vb:"140 -8 50 92"},
-    {id:"wand", label:"요술봉", lv:4, vb:"140 28 46 60"}]}
+    {id:"sunflower", label:"해바라기", lv:3, vb:"138 18 50 70"},
+    {id:"wand", label:"요술봉", lv:4, vb:"140 28 46 60"},
+    {id:"umbrella", label:"우산", lv:5, vb:"134 0 58 92"},
+    {id:"goldcherry", label:"황금 체리", lv:99, rb:3, vb:"138 16 52 66"}]}
 };
 function itemIcon(group, it){
+  if(group === "color" && it.fill === "rainbow") return `<svg viewBox="50 122 100 106">${dressSVG("rainbow", "none")}</svg>`;
   if(group === "color") return `<svg viewBox="0 0 40 40"><path d="M14 6 L26 6 L34 36 L6 36 Z" fill="${it.fill}" ${OL3}/></svg>`;
+  if(group === "hair") return `<svg viewBox="0 0 40 40"><path d="M9 14 C3 24 4 32 6 38 L12 38 C11 30 12 22 15 17Z M31 14 C37 24 36 32 34 38 L28 38 C29 30 28 22 25 17Z" fill="${it.fill}" ${OL3}/>
+    <circle cx="20" cy="18" r="11" fill="#ffd9c2" ${OL3}/><path d="M9 19 C7 4 33 4 31 19 L27 13 L23 18 L20 11 L17 18 L13 13 Z" fill="${it.fill}" ${OL3}/></svg>`;
+  if(group === "pattern" && it.id !== "none") return `<svg viewBox="50 122 100 106">${dressSVG("#ff9fb2", it.id)}</svg>`;
   if(it.id === "none") return `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="14" fill="none" stroke="#bbb" stroke-width="4"/><line x1="10" y1="30" x2="30" y2="10" stroke="#bbb" stroke-width="4"/></svg>`;
   return `<svg viewBox="${it.vb}">${PIECES[it.id]()}</svg>`;
 }
@@ -655,13 +749,13 @@ function itemIcon(group, it){
    저장 (이 기기 안)
    ========================================================= */
 const KEY = "cherry-story-v1";
-function fresh(){ return {xp:0, seen:{}, best:{}, sound:true, outfit:{color:"pink", hat:"ribbon", item:"book"}}; }
+function fresh(){ return {xp:0, rebirth:0, seen:{}, best:{}, sound:true, outfit:{color:"pink", pattern:"none", hair:"brown", hat:"ribbon", item:"book"}}; }
 function load(){
   try{
     const v = JSON.parse(localStorage.getItem(KEY));
     if(v && typeof v.xp === "number"){
       const d = fresh();
-      return {xp:v.xp, seen:v.seen || {}, best:v.best || {}, sound:v.sound !== false, outfit:Object.assign(d.outfit, v.outfit || {})};
+      return {xp:v.xp, rebirth:v.rebirth || 0, seen:v.seen || {}, best:v.best || {}, sound:v.sound !== false, outfit:Object.assign(d.outfit, v.outfit || {})};
     }
   }catch(e){}
   return fresh();
@@ -669,6 +763,8 @@ function load(){
 let S = load();
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 const levelOf = xp => Math.min(MAX_LEVEL, Math.floor(xp / XP_PER_LEVEL) + 1);
+/* 환생한 적이 있으면 보통 옷은 다 열린 채로 남아요. 환생 옷은 환생 횟수로 열려요. */
+const isUnlocked = it => it.rb ? S.rebirth >= it.rb : (S.rebirth > 0 || it.lv <= levelOf(S.xp));
 
 /* =========================================================
    체리 (마스코트) — 양갈래 긴 머리, 체리 장식, 만세
@@ -684,7 +780,8 @@ function cherrySVG(face, outfit){
   face = face || "smile";
   const o = outfit || S.outfit;
   const color = (CLOSET.color.list.find(c => c.id === o.color) || CLOSET.color.list[0]).fill;
-  const hair = "#5b3a2e", hairL = "#7a5040", skin = "#ffd9c2";
+  const hc = CLOSET.hair.list.find(c => c.id === o.hair) || CLOSET.hair.list[0];
+  const hair = hc.fill, hairL = hc.light, skin = "#ffd9c2";
   let eyes, mouth, extra = "";
   if(face === "happy"){
     eyes = `<polyline points="79,80 89,86 79,92" fill="none" ${OL}/><polyline points="121,80 111,86 121,92" fill="none" ${OL}/>`;
@@ -703,25 +800,32 @@ function cherrySVG(face, outfit){
     mouth = `<path d="M91 98 Q100 107 109 98" fill="none" ${OL}/>`;
   }
   const hat = o.hat && PIECES[o.hat] ? PIECES[o.hat]() : "";
-  const item = o.item && PIECES[o.item] ? PIECES[o.item]() : "";
+  /* 기쁠 때는 팔을 번쩍 들고(만세), 평소에는 팔을 내려요 */
+  const up = face === "happy";
+  const arm = (x1, y1, x2, y2) => `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="${INK}" stroke-width="15" stroke-linecap="round"/><path d="M${x1} ${y1} L${x2} ${y2}" stroke="${skin}" stroke-width="9" stroke-linecap="round"/>`;
+  const armsUp = arm(82, 136, 48, 82) + arm(118, 136, 152, 82) +
+    `<circle cx="47" cy="78" r="9" fill="${skin}" ${OL3}/><circle cx="153" cy="78" r="9" fill="${skin}" ${OL3}/>`;
+  const armsDown = arm(82, 136, 54, 184) + arm(118, 136, 150, 182) +
+    `<circle cx="52" cy="187" r="9" fill="${skin}" ${OL3}/><circle cx="152" cy="185" r="9" fill="${skin}" ${OL3}/>`;
+  const itemRaw = o.item && PIECES[o.item] ? PIECES[o.item]() : "";
+  const item = !itemRaw ? "" : up ? itemRaw : `<g transform="translate(-1 107)">${itemRaw}</g>`;
   return `<svg viewBox="0 -10 200 275" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="마스코트 체리">
   <path d="M66 64 C32 120 28 192 34 240 L52 242 C48 192 54 126 82 76 Z" fill="${hair}" ${OL}/>
   <path d="M134 64 C168 120 172 192 166 240 L148 242 C152 192 146 126 118 76 Z" fill="${hair}" ${OL}/>
   <path d="M60 90 C46 130 42 180 44 226" stroke="${hairL}" stroke-width="4" fill="none" stroke-linecap="round"/>
   <path d="M140 90 C154 130 158 180 156 226" stroke="${hairL}" stroke-width="4" fill="none" stroke-linecap="round"/>
   ${cherryPair(43, 248, .95)}${cherryPair(157, 248, .95)}
-  <path d="M82 136 L48 82" stroke="${INK}" stroke-width="15" stroke-linecap="round"/><path d="M82 136 L48 82" stroke="${skin}" stroke-width="9" stroke-linecap="round"/>
-  <path d="M118 136 L152 82" stroke="${INK}" stroke-width="15" stroke-linecap="round"/><path d="M118 136 L152 82" stroke="${skin}" stroke-width="9" stroke-linecap="round"/>
-  <circle cx="47" cy="78" r="9" fill="${skin}" ${OL3}/><circle cx="153" cy="78" r="9" fill="${skin}" ${OL3}/>
+  ${up ? armsUp : ""}
   <path d="M91 222 L89 244 M109 222 L111 244" stroke="${INK}" stroke-width="13" stroke-linecap="round"/>
   <path d="M91 222 L89 244 M109 222 L111 244" stroke="${skin}" stroke-width="7" stroke-linecap="round"/>
   <ellipse cx="86" cy="249" rx="11" ry="6" fill="#e2384d" ${OL3}/><ellipse cx="114" cy="249" rx="11" ry="6" fill="#e2384d" ${OL3}/>
-  <path d="M80 128 L120 128 L144 222 L56 222 Z" fill="${color}" ${OL}/>
+  ${dressSVG(color, o.pattern)}
   <path d="M104 132 L118 132 L138 216 L118 216 Z" fill="#000" opacity=".08"/>
   <path d="M78 130 L83 152 L94 136 Z M122 130 L117 152 L106 136 Z" fill="#fff" ${OL3}/>
   ${cherryPair(100, 164, .75)}
   <line x1="82" y1="130" x2="126" y2="190" stroke="${INK}" stroke-width="4"/>
   <rect x="116" y="184" width="26" height="20" rx="6" fill="#fff" ${OL3}/>${cherryPair(129, 195, .5)}
+  ${up ? "" : armsDown}
   <rect x="93" y="108" width="14" height="22" fill="${skin}" ${OL3}/>
   <circle cx="100" cy="80" r="35" fill="${skin}" ${OL}/>
   <path d="M63 82 C58 36 142 36 137 82 L129 66 L121 82 L112 62 L104 80 L96 62 L88 82 L79 64 L71 82 Z" fill="${hair}" ${OL3}/>
@@ -901,7 +1005,7 @@ function levelInfo(){
 function renderTitle(){
   const read = STORIES.filter(s => (S.seen[s.id] || []).length).length;
   const stars = Object.values(S.best).reduce((a, b) => a + b, 0);
-  $("titleStats").innerHTML = `<span>⭐ 레벨 ${levelOf(S.xp)}</span><span>📚 읽은 이야기 ${read} / ${STORIES.length}</span><span>🌟 모은 별 ${stars}</span>`;
+  $("titleStats").innerHTML = `<span>⭐ 레벨 ${levelOf(S.xp)}</span>${S.rebirth ? `<span class="rb-stars">🌟 환생 ${S.rebirth}번</span>` : ""}<span>📚 읽은 이야기 ${read} / ${STORIES.length}</span><span>🌟 모은 별 ${stars}</span>`;
   drawMascot("smile");
 }
 $("startGame").onclick = () => { SFX.pop(); show("sHome"); renderHome(); say("고르기에서 이야기를 골라 봐!", "happy", "jump"); };
@@ -913,9 +1017,51 @@ let sel = 0;
 function renderLevel(){
   const L = levelInfo();
   $("lvBadge").textContent = `레벨 ${L.lv}`;
-  $("lvName").textContent = LEVEL_NAMES[L.lv];
+  $("lvName").innerHTML = LEVEL_NAMES[L.lv] + (S.rebirth ? ` <span class="rb-stars">🌟${S.rebirth}</span>` : "");
   $("lvFill").style.width = L.pct + "%";
-  $("lvSub").textContent = L.sub;
+  if(L.lv >= MAX_LEVEL){
+    $("lvSub").innerHTML = `최고 레벨이에요! <button class="go rebirth-btn" type="button" id="homeRebirth">🌟 환생하기</button>`;
+    $("homeRebirth").onclick = openRebirth;
+  }else $("lvSub").textContent = L.sub;
+}
+
+/* =========================================================
+   🌟 환생하기 — 레벨 5에서 다시 레벨 1로! 대신 특별한 옷이 열려요
+   ========================================================= */
+const rebirthItems = n => Object.entries(CLOSET).flatMap(([gk, gr]) => gr.list.filter(it => it.rb === n).map(it => ({gk, it})));
+function openRebirth(){
+  SFX.pop();
+  const next = S.rebirth + 1;
+  const gifts = rebirthItems(next);
+  $("rbIn").innerHTML = `<div class="rb-title">🌟 환생하기</div>
+    <div class="mascot bob" id="rbCherry">${cherrySVG("think")}</div>
+    <div class="rb-text">환생하면 <b>레벨 1</b>로 돌아가요.<br>지금까지 모은 옷은 그대로 있어요!</div>
+    ${gifts.length ? `<div class="rb-text">환생 선물 🎁</div><div class="lu-items">${gifts.map(g => `<span>${itemIcon(g.gk, g.it)}</span>`).join("")}</div>`
+      : `<div class="rb-text">환생 별 🌟이 하나 더 생겨요!</div>`}
+    <div class="btn-row">
+      <button class="go rebirth-btn" type="button" id="rbYes">🌟 환생할래요!</button>
+      <button class="ghost" type="button" id="rbNo">아직 안 할래요</button>
+    </div>`;
+  $("rebirth").classList.add("on");
+  $("rbYes").onclick = doRebirth;
+  $("rbNo").onclick = () => { SFX.tap(); $("rebirth").classList.remove("on"); };
+}
+function doRebirth(){
+  S.rebirth += 1; S.xp = 0; save();
+  const gifts = rebirthItems(S.rebirth);
+  $("rbIn").innerHTML = `<div class="rb-title">환생 성공!</div>
+    <div class="mascot" id="rbCherry">${cherrySVG("happy")}</div>
+    <div class="rb-text"><span class="rb-stars" style="font-size:28px">🌟 × ${S.rebirth}</span><br>다시 레벨 1부터 힘내자!</div>
+    ${gifts.length ? `<div class="rb-text">특별한 옷이 열렸어요!</div><div class="lu-items">${gifts.map((g, i) => `<span style="animation-delay:${.4 + i * .15}s">${itemIcon(g.gk, g.it)}</span>`).join("")}</div>` : ""}
+    <div class="btn-row">
+      ${gifts.length ? `<button class="go" type="button" id="rbCloset">👗 바로 입어 보기</button>` : ""}
+      <button class="ghost" type="button" id="rbDone">좋아요!</button>
+    </div>`;
+  SFX.level(); confetti(70);
+  const pic = $("rbCherry"); pic.classList.add("spin");
+  const close = () => { $("rebirth").classList.remove("on"); if(current === "sHome") renderHome(); if(current === "sCloset") renderCloset(); };
+  $("rbDone").onclick = () => { SFX.tap(); close(); };
+  if($("rbCloset")) $("rbCloset").onclick = () => { SFX.pop(); $("rebirth").classList.remove("on"); openCloset(); };
 }
 function renderSlots(){
   const box = $("slots"); box.innerHTML = "";
@@ -1111,7 +1257,7 @@ function checkLevelUp(){
   if(now <= R.lvStart) return;
   R.lvShown = true;
   const from = R.lvStart;
-  const opened = Object.entries(CLOSET).flatMap(([gk, gr]) => gr.list.filter(it => it.lv > from && it.lv <= now && it.id !== "none").map(it => itemIcon(gk, it)));
+  const opened = S.rebirth > 0 ? [] : Object.entries(CLOSET).flatMap(([gk, gr]) => gr.list.filter(it => !it.rb && it.lv > from && it.lv <= now && it.id !== "none").map(it => itemIcon(gk, it)));
   $("luNum").textContent = from;
   $("luName").textContent = LEVEL_NAMES[now];
   $("luCherry").innerHTML = cherrySVG("happy");
@@ -1139,20 +1285,23 @@ function goHome(){
    5. 옷장 — 누르면 체리에게 바로 입혀요
    ========================================================= */
 function openCloset(){ show("sCloset"); renderCloset(); say("옷을 골라 줘! 바로 입어 볼게!", "happy", "jump"); }
+const needText = it => it.rb ? `🌟 환생 ${it.rb}번` : `🔒 레벨 ${it.lv}`;
 function renderCloset(){
-  const lv = levelOf(S.xp);
+  $("closetRebirth").innerHTML = levelOf(S.xp) >= MAX_LEVEL ? `<button class="go rebirth-btn" type="button" id="closetRebirthBtn">🌟 환생하기</button>` : "";
+  if($("closetRebirthBtn")) $("closetRebirthBtn").onclick = openRebirth;
   $("racks").innerHTML = Object.entries(CLOSET).map(([key, gr]) => `<div class="rack"><h3>${gr.name}</h3><div class="items">
     ${gr.list.map(it => {
-      const locked = it.lv > lv, on = S.outfit[key] === it.id;
-      return `<button class="item press${on ? " on" : ""}${locked ? " lock" : ""}" type="button" data-g="${key}" data-id="${it.id}" data-lv="${it.lv}" aria-label="${it.label}${locked ? " (잠김)" : ""}">
-        ${itemIcon(key, it)}${locked ? `🔒 레벨 ${it.lv}` : it.label}</button>`;
+      const locked = !isUnlocked(it), on = S.outfit[key] === it.id;
+      return `<button class="item press${on ? " on" : ""}${locked ? " lock" : ""}${it.rb ? " special" : ""}" type="button" data-g="${key}" data-id="${it.id}" aria-label="${it.label}${locked ? " (잠김)" : ""}">
+        ${itemIcon(key, it)}${locked ? needText(it) : it.label}</button>`;
     }).join("")}</div></div>`).join("");
   document.querySelectorAll(".item").forEach(b => b.onclick = () => wear(b));
 }
 function wear(b){
-  if(+b.dataset.lv > levelOf(S.xp)){
+  const it = CLOSET[b.dataset.g].list.find(x => x.id === b.dataset.id);
+  if(!isUnlocked(it)){
     SFX.wrong(); b.classList.remove("nope"); void b.offsetWidth; b.classList.add("nope");
-    say(`레벨 ${b.dataset.lv}이 되면 입을 수 있어!`, "sad", "tilt");
+    say(it.rb ? `환생을 ${it.rb}번 하면 입을 수 있어!` : `레벨 ${it.lv}이 되면 입을 수 있어!`, "sad", "tilt");
     return;
   }
   S.outfit[b.dataset.g] = b.dataset.id; save();
@@ -1171,7 +1320,7 @@ let idleT;
 function resetIdle(){
   clearTimeout(idleT);
   idleT = setTimeout(() => {
-    if($("receipt").classList.contains("on") || $("levelUp").classList.contains("on")) return;
+    if(document.querySelector(".modal.on")) return;
     if(TTS && speechSynthesis.speaking){ resetIdle(); return; }
     say("stuck", "think", "tilt", 4000);
   }, 20000);

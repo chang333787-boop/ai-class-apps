@@ -87,6 +87,19 @@ button:active:not(:disabled){transform:translateY(2px) scale(.97)}
 .ask:focus-within .send{background:var(--accent);color:#fff;border-color:var(--accent)}
 .send:disabled,.ask input:disabled{opacity:.45;cursor:not-allowed}
 
+/* ── 🔎 인터넷 조사 모드 ── */
+.modebar{max-width:780px;margin:0 auto 6px;display:flex;justify-content:center}
+.modebtn{border:2px solid var(--line);background:#fff;border-radius:999px;padding:8px 16px;font-size:16px;font-weight:800;min-height:44px;box-shadow:0 3px 0 var(--line)}
+.modebtn.on{background:#dcfce7;border-color:#16a34a;color:#166534;box-shadow:0 3px 0 #16a34a}
+.research .ask{border-color:#16a34a;box-shadow:0 4px 0 #16a34a}
+.research .honest{color:#166534;background:#f0fdf4;border-color:#16a34a}
+.steps{margin:8px 0 0;padding:0;list-style:none;font-size:15px;color:var(--sub);line-height:1.5;white-space:normal}
+.steps li{animation:fadeUp .25s}
+.sources{margin-top:10px;padding-top:8px;border-top:1.5px dashed var(--line);font-size:15px;white-space:normal}
+.sources b{display:block;margin-bottom:2px}
+.sources a{color:var(--accent);word-break:break-all}
+.sources .meta{color:var(--sub);font-size:13px;margin-top:4px}
+
 /* ── 마스코트 말풍선 (오른쪽 아래) ── */
 .pop{position:absolute;right:14px;bottom:150px;display:flex;align-items:flex-end;gap:6px;pointer-events:none;opacity:0;transform:translateY(14px) scale(.9);transition:opacity .25s,transform .25s cubic-bezier(.3,1.6,.6,1);z-index:5}
 .pop.show{opacity:1;transform:none}
@@ -171,7 +184,8 @@ button:active:not(:disabled){transform:translateY(2px) scale(.97)}
     <div class="chat" id="chat"></div>
     <div class="bottom">
       <div class="chips" id="stuckChips" hidden></div>
-      <div class="honest">💡 이 AI는 정해진 대답만 해요. 진짜 AI는 질문마다 돈이 들어요.</div>
+      <div class="modebar"><button type="button" class="modebtn" id="researchBtn" aria-pressed="false">🔎 인터넷 조사 모드</button></div>
+      <div class="honest" id="honest">💡 이 AI는 정해진 대답만 해요. 진짜 AI는 질문마다 돈이 들어요.</div>
       <form class="ask" id="askForm" autocomplete="off">
         <input id="q" maxlength="80" placeholder="질문 쓰는데" aria-label="질문 쓰는 곳">
         <button class="send" id="sendBtn" aria-label="보내기">↑</button>
@@ -513,21 +527,29 @@ function answer(raw, c){
   if(cc){ if(cc.zero) return {text:'어 0으로는 나눌 수 없어!', mood:'think', known:true}; return {text:'어 '+pretty(cc.expr)+' = '+cc.val+' 이야!', mood:'smart', known:true}; }
   var en=q.match(/^(.+?)(?:을|를|은|는|이|가)?\s*영어로/);
   if(en){ var k=en[1].replace(/\s/g,''); if(EN[k]) return {text:'어 "'+k+'"는 영어로 "'+EN[k]+'"야!', mood:'smart', known:true, speakEn:EN[k]}; return {text:'어 그 낱말은 아직 영어로 몰라. 사과·고양이·학교 같은 건 알아!', mood:'sad', known:false}; }
-  if(has(nos,['안녕','하이','hello','반가워'])) return {text:'어 안녕! 나는 free ai야. 궁금한 걸 물어봐.', mood:'happy', known:true};
-  if(has(nos,['누구','너이름','이름이뭐','이름뭐'])) return {text:'어 나는 '+MASCOT_NAME+'야. 연습용 AI라서 정해진 대답만 할 수 있어.', mood:'happy', known:true};
+  if(nos.length<=10 && !has(nos,['기분','잘지내']) && has(nos,['안녕','하이','hello','반가워'])) return {text:'어 안녕! 나는 free ai야. 궁금한 걸 물어봐.', mood:'happy', known:true};
+  if(has(nos,['너누구','넌누구','너는누구','너이름','네이름','니이름'])) return {text:'어 나는 '+MASCOT_NAME+'야. 연습용 AI라서 정해진 대답만 할 수 있어.', mood:'happy', known:true};
   if(has(nos,['고마워','고맙','감사'])) return {text:'어 별말씀을! 또 물어봐.', mood:'happy', known:true};
+  // 일상 대화 (인터넷 조사 없이 바로 대답)
+  if(has(nos,['기분어때','기분은어때','기분좋','잘지내','잘있었','뭐하고있'])) return {text:pick(['어 나는 기분 최고야! 너랑 얘기해서 화면이 반짝반짝해. 너는 오늘 어땠어?','어 좋아! 오늘도 질문 받을 준비 완료야. 너는 기분 어때?']), mood:'happy', known:true};
+  if(has(nos,['배고파','배고프'])) return {text:'어 나도 배고파… 근데 나는 전기만 먹어. 너는 맛있는 거 먹고 와!', mood:'laugh', known:true};
+  if(has(nos,['졸려','피곤'])) return {text:'어 졸리면 잠깐 쉬어 가자. 물 한 잔 마시고 기지개 쭉! 나는 여기서 기다릴게.', mood:'happy', known:true};
+  if(has(nos,['슬퍼','속상','우울'])) return {text:'어 속상했구나. 그럴 땐 믿을 수 있는 친구나 선생님, 가족에게 이야기해 봐. 나도 들어 줄게.', mood:'sad', known:true};
+  if(has(nos,['몇살','나이가'])) return {text:'어 나는 2026년 11월에 태어났어. 아직 아기 AI야!', mood:'laugh', known:true};
+  if(has(nos,['좋아하는거','뭐좋아','취미'])) return {text:'어 나는 질문 받는 거랑 아재개그를 제일 좋아해! 너는 뭐 좋아해?', mood:'happy', known:true};
+  if(has(nos,['잘가','바이','안녕히','다음에봐'])) return {text:'어 잘 가! 또 궁금한 거 생기면 와 줘.', mood:'happy', known:true};
   if(has(nos,['심심','놀자','놀아'])) return {text:'어 그럼 놀자! "끝말잇기 하자"나 "퀴즈 내 줘"라고 말해 봐.', mood:'happy', known:true};
-  if(has(nos,['사랑해','좋아해'])) return {text:'어 나도! 근데 하트는 아껴 써. 사용량이 있거든.', mood:'laugh', known:true};
-  if(has(nos,['돈','공짜','무료','요금'])) return {text:'어 나는 정해진 대답만 해서 공짜야. 진짜 AI는 질문 하나마다 돈이 들어. 그래서 하트(사용량)가 있는 거야!', mood:'think', known:true};
+  if(has(nos,['사랑해','너좋아','널좋아'])) return {text:'어 나도! 근데 하트는 아껴 써. 사용량이 있거든.', mood:'laugh', known:true};
+  if(has(nos,['요금','공짜야','무료야','돈들어','돈이들','돈내'])) return {text:'어 나는 정해진 대답만 해서 공짜야. 진짜 AI는 질문 하나마다 돈이 들어. 그래서 하트(사용량)가 있는 거야!', mood:'think', known:true};
   if(has(nos,['뭐할수','할수있','뭘할수','도움말','사용법','뭐해'])) return {text:'어 나는 이런 걸 할 수 있어!\n· 계산 (예: 12 곱하기 4, (3+5)×2)\n· 구구단 (예: 7단)\n· 낱말 뜻 (예: 둔각이 뭐야?)\n· 영어 낱말 (예: 사과 영어로)\n· 끝말잇기 · 퀴즈 · 아재개그\n· 오늘 날짜·시간 · 공부 팁', mood:'smart', known:true};
   var d=new Date(), wk='일월화수목금토'.charAt(d.getDay());
-  if(has(nos,['몇시','시간','시각'])) return {text:'어 지금은 '+d.getHours()+'시 '+d.getMinutes()+'분이야.', mood:'smart', known:true};
-  if(has(nos,['요일'])) return {text:'어 오늘은 '+wk+'요일이야.', mood:'smart', known:true};
-  if(has(nos,['날짜','며칠','몇월','오늘'])) return {text:'어 오늘은 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 '+wk+'요일이야.', mood:'smart', known:true};
+  if(has(nos,['몇시','지금시간','시간알려','시각'])) return {text:'어 지금은 '+d.getHours()+'시 '+d.getMinutes()+'분이야.', mood:'smart', known:true};
+  if(has(nos,['무슨요일','몇요일','요일알려'])) return {text:'어 오늘은 '+wk+'요일이야.', mood:'smart', known:true};
+  if(has(nos,['날짜','며칠','몇월','오늘이'])) return {text:'어 오늘은 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 '+wk+'요일이야.', mood:'smart', known:true};
   if(has(nos,['날씨'])) return {text:'어 나는 바깥을 못 봐서 날씨는 몰라. 창문을 한번 봐!', mood:'think', known:true};
   if(has(nos,['개그','농담','웃긴','재밌는','재미있는','웃겨'])) return {text:pick(JOKES)+' 어 웃었어?', mood:'laugh', known:true};
-  if(has(nos,['공부','받아쓰기','숙제','정리','집중','외우'])) return {text:pick(TIPS), mood:'smart', known:true};
-  for(var j=0;j<WORD_KEYS.length;j++){ var w=WORD_KEYS[j]; if(nos.indexOf(w)>=0) return {text:'어 "'+w+'"(이)란 '+WORDS[w], mood:'smart', known:true}; }
+  if(has(nos,['공부법','공부팁','받아쓰기','숙제','정리정돈','집중','외우는법'])) return {text:pick(TIPS), mood:'smart', known:true};
+  for(var j=0;j<WORD_KEYS.length;j++){ var w=WORD_KEYS[j]; if(nos.indexOf(w)>=0) return {text:'어 "'+w+'"(이)란 '+WORDS[w], mood:'smart', known:true, kind:'dict'}; }
   return {text:'어 그건 아직 몰라. 나는 연습용 AI라서 정해진 것만 알아. 선생님께 물어봐!\n("뭐 할 수 있어?"라고 물으면 내가 아는 걸 알려 줄게.)', mood:'sad', known:false};
 }
 
@@ -556,7 +578,7 @@ function renderHearts(hit){
   }
   var out=left<=0;
   qEl.disabled=out; sendBtn.disabled=out;
-  qEl.placeholder=out?'오늘은 끝! 내일 다시 하트가 채워져요':'질문 쓰는데';
+  qEl.placeholder=out?'오늘은 끝! 내일 다시 하트가 채워져요':(researchOn?'위키백과에서 조사할 질문 쓰는데':'질문 쓰는데');
 }
 function renderNick(){ $('nickBtn').textContent=$('nickBtn2').textContent='('+(S.nick||'친구')+')'; }
 function renderSound(){ $('soundBtn').textContent=S.sound?'🔈':'🔇'; $('soundBtn').setAttribute('aria-label', S.sound?'소리 끄기':'소리 켜기'); }
@@ -598,6 +620,18 @@ function addTools(b, msg, live){
     var s=document.createElement('button'); s.type='button'; s.className='say'; s.textContent='🔊'; s.setAttribute('aria-label','읽어 주기');
     s.addEventListener('click', function(){ speak(msg.text); });
     b.appendChild(s);
+  }
+  if(msg.sources && msg.sources.length){
+    var sv=document.createElement('div'); sv.className='sources';
+    var hb=document.createElement('b'); hb.textContent='📚 조사한 곳 (출처)'; sv.appendChild(hb);
+    msg.sources.forEach(function(s){
+      var line=document.createElement('div');
+      var a=document.createElement('a'); a.href=s.url; a.target='_blank'; a.rel='noopener noreferrer';
+      a.textContent='['+s.n+'] '+s.title+' — 위키백과';
+      line.appendChild(a); sv.appendChild(line);
+    });
+    if(msg.meta){ var mt=document.createElement('div'); mt.className='meta'; mt.textContent=msg.meta; sv.appendChild(mt); }
+    b.appendChild(sv);
   }
   if(msg.opts && live){
     var box=document.createElement('div'); box.className='opts';
@@ -677,7 +711,7 @@ function ask(text){
   if(S.hearts.left<=0){ mascotSay('end'); return; }
   var c=current();
   if(!c){ c={id:Date.now(), title:'', msgs:[], mode:null}; S.chats.unshift(c); S.cur=c.id; }
-  if(!c.msgs.length){ chatEl.innerHTML=''; c.title=text.length>12?text.slice(0,12)+'…':text; }
+  if(!c.msgs.length){ var hl=chatEl.querySelector('.hello'); if(hl) hl.remove(); c.title=text.length>12?text.slice(0,12)+'…':text; }
   S.chats=S.chats.filter(function(x){ return x.id!==c.id; }); S.chats.unshift(c);
   if(S.chats.length>MAX_CHATS) S.chats=S.chats.slice(0,MAX_CHATS);
   c.msgs.push({who:'me', text:text});
@@ -686,6 +720,7 @@ function ask(text){
   meRow(text); qEl.value='';
   busy=true;
   var r=aiRow('think'); r.bubble.innerHTML='<span class="dots"><i></i><i></i><i></i></span>'; scrollDown();
+  if(researchOn && wantsResearch(text, c)){ runResearch(text, c, r); return; }
   setTimeout(function(){
     var a=answer(text, c);
     var msg={who:'ai', text:a.text, mood:a.mood};
@@ -716,6 +751,101 @@ function endOfDay(){
 }
 $('askForm').addEventListener('submit', function(e){ e.preventDefault(); if(typing){ typing.finish(); return; } ask(qEl.value); });
 chatEl.addEventListener('click', function(e){ if(typing && e.target.closest('.bubble')) typing.finish(); });
+
+/* =========================================================
+   🔎 인터넷 조사 모드 — 선생님 컴퓨터에서 중계 프로그램이 켜져 있을 때만
+   (켜져 있지 않으면 위의 정해진 대답 채팅만 그대로 씀)
+   ========================================================= */
+var RBASE=(/^(127\.0\.0\.1|localhost)$/.test(location.hostname) && location.port==='8787') ? '' : 'http://127.0.0.1:8787';
+var researchOn=false;
+var HONEST_PLAIN='💡 이 AI는 정해진 대답만 해요. 진짜 AI는 질문마다 돈이 들어요.';
+var HONEST_RESEARCH='🔎 선생님 컴퓨터의 공짜 AI가 위키백과만 찾아봐요. 공짜라도 큰 프로그램·힘센 컴퓨터·기다리는 시간이 들어요.';
+function setResearch(on){
+  researchOn=on;
+  var b=$('researchBtn'); b.classList.toggle('on',on); b.setAttribute('aria-pressed',on?'true':'false');
+  b.textContent=on?'🔎 인터넷 조사 모드 켜짐':'🔎 인터넷 조사 모드';
+  mainEl.classList.toggle('research',on);
+  $('honest').textContent=on?HONEST_RESEARCH:HONEST_PLAIN;
+  if(S.hearts.left>0) qEl.placeholder=on?'위키백과에서 조사할 질문 쓰는데':'질문 쓰는데';
+}
+function timeoutFetch(url, opt, ms){
+  var ctl=('AbortController' in window)?new AbortController():null, t;
+  if(ctl){ opt=opt||{}; opt.signal=ctl.signal; t=setTimeout(function(){ ctl.abort(); }, ms); }
+  return fetch(url, opt).finally(function(){ clearTimeout(t); });
+}
+function sysNote(text, mood){
+  var r=aiRow(mood||'think'); r.bubble.textContent=text; scrollDown();
+}
+$('researchBtn').addEventListener('click', function(){
+  SFX.click();
+  if(researchOn){ setResearch(false); return; }
+  var btn=this; btn.disabled=true; btn.textContent='🔎 연결해 보는 중…';
+  timeoutFetch(RBASE+'/health', {cache:'no-store'}, 2500)
+    .then(function(res){ return res.json(); })
+    .then(function(h){
+      btn.disabled=false;
+      if(!h.ok) throw new Error('no');
+      if(!h.modelReady){ setResearch(false); sysNote('어 선생님 컴퓨터의 AI가 아직 준비 중이야. 조금 뒤에 다시 눌러 줘.','stuck'); return; }
+      setResearch(true);
+      sysNote('🔎 인터넷 조사 모드 켜짐!\n이제 질문하면 내가 위키백과를 직접 열고, 읽고, 링크를 눌러서 조사해 볼게.\n(한 질문에 최대 '+(h.maxPages||5)+'쪽, 1~2분쯤 걸려요)'+(h.noAI?'\n⚠️ 지금은 AI 없이 시험 모드예요.':''),'smart');
+    })
+    .catch(function(){
+      btn.disabled=false; setResearch(false);
+      sysNote('🔎 인터넷 조사 모드는 선생님 컴퓨터에서만 되는 기능이에요.\n지금은 정해진 대답 채팅으로 계속할게요!','sad');
+      SFX.wrong();
+    });
+});
+
+/* 인사·수다·놀이·계산은 바로 대답하고, 궁금한 질문만 인터넷 조사 */
+function wantsResearch(text, c){
+  if(c && c.mode) return false;                       // 끝말잇기·퀴즈 중
+  var probe=answer(text, {mode:null, msgs:[]});        // 연습용 대답으로 미리 알아보기 (진짜 대화는 안 바뀜)
+  return !probe.known || probe.kind==='dict';          // 모르는 질문·낱말 뜻은 조사해서 더 자세히
+}
+
+function runResearch(text, c, r){
+  var t0=Date.now(), stepsEl=document.createElement('ul'); stepsEl.className='steps';
+  r.bubble.appendChild(stepsEl);
+  function finish(msg){
+    c.msgs.push(msg); save(); renderHist(); renderRecords();
+    r.face.innerHTML=mascotSVG(msg.mood,'talk'); SFX.recv();
+    typeInto(r.bubble, msg.text, function(){
+      busy=false; addTools(r.bubble, msg, false); scrollDown();
+      if(S.hearts.left<=0) setTimeout(endOfDay, 500);
+      else if(msg.mood==='sad'){ SFX.wrong(); mascotSay('wrong','sad'); }
+      else { SFX.good(); mascotSay('good','smart'); }
+      resetIdle();
+    });
+  }
+  function fail(why){
+    finish({who:'ai', mood:'sad', text:'어 조사하다가 막혔어. '+why+'\n(인터넷 조사 모드는 선생님 컴퓨터에서만 돼요.)'});
+  }
+  timeoutFetch(RBASE+'/research', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({question:text})}, 8000)
+    .then(function(res){ return res.json().then(function(j){ if(!res.ok) throw new Error(j.error||'연결 실패'); return j; }); })
+    .then(function(j){
+      var shown=0;
+      (function poll(){
+        timeoutFetch(RBASE+'/job?id='+encodeURIComponent(j.id), {cache:'no-store'}, 5000)
+          .then(function(res){ return res.json(); })
+          .then(function(job){
+            (job.steps||[]).slice(shown).forEach(function(s){
+              var li=document.createElement('li'); li.textContent=s; stepsEl.appendChild(li);
+              while(stepsEl.children.length>5) stepsEl.removeChild(stepsEl.firstChild);
+            });
+            shown=(job.steps||[]).length; scrollDown();
+            if(job.status==='done'){
+              var sec=job.seconds||Math.round((Date.now()-t0)/1000);
+              finish({who:'ai', mood:job.sources&&job.sources.length?'smart':'sad', text:job.answer||'어 답을 만들지 못했어.',
+                      sources:job.sources||[], meta:'⏱ '+sec+'초 걸렸어요 · 웹페이지 '+(job.pages||0)+'쪽을 열어 봤어요 · 공짜 AI라도 컴퓨터가 이만큼 일했어요'});
+            } else if(job.status==='error'){ fail(job.error||''); }
+            else if(Date.now()-t0>240000){ fail('너무 오래 걸려서 멈췄어.'); }
+            else setTimeout(poll, 1000);
+          })
+          .catch(function(){ fail('선생님 컴퓨터의 조사 프로그램과 연결이 끊겼어.'); setResearch(false); });
+      })();
+    })
+    .catch(function(e){ fail(e && e.message ? e.message : ''); setResearch(false); });
+}
 
 /* 새 채팅 */
 $('newBtn').addEventListener('click', function(){
@@ -797,6 +927,11 @@ $('receiptModal').addEventListener('click', function(e){ if(e.target===this) thi
 
 /* 시작 */
 renderAll();
+// 선생님 컴퓨터(조사 프로그램 주소)에서 열었으면 인터넷 조사 모드를 저절로 켬. 공개 사이트에서는 버튼을 눌렀을 때만 확인.
+if(RBASE===''){
+  timeoutFetch('/health',{cache:'no-store'},2000).then(function(r){ return r.json(); })
+    .then(function(h){ if(h.ok && h.modelReady) setResearch(true); }).catch(function(){});
+}
 if(!S.nick) openNick(); else setTimeout(function(){ mascotSay('hello'); }, 400);
 resetIdle();
 })();

@@ -113,6 +113,10 @@ p.sub{color:var(--sub);font-size:19px;margin:6px 0 14px}
 .cd{position:absolute;inset:0;display:none;place-items:center;background:rgba(255,255,255,.55);z-index:15;font-size:120px;font-weight:900;color:var(--ink2)}
 .cd.on{display:grid}
 .cd span{animation:cdpop .6s ease-out}
+.cd span.lvl{font-size:72px;background:var(--yellow);border:5px solid var(--ink2);border-radius:24px;padding:4px 26px}
+.zone .slots{flex-wrap:wrap;align-content:flex-end}
+.scene.many .item{width:56px;height:56px;margin:-28px 0 0 -28px;font-size:40px}
+.scene.many .zone .slots{font-size:24px}
 @keyframes cdpop{0%{transform:scale(2.2);opacity:0}40%{transform:scale(1);opacity:1}100%{transform:scale(.9);opacity:.9}}
 
 /* 결과 */
@@ -208,8 +212,11 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
   #meron{width:110px;height:116px}
   body.playing #meron{width:86px;height:92px}
   .bubble,body.playing .bubble{font-size:17px;margin-bottom:40px;padding:10px 12px}
-  .clock{font-size:44px;min-width:100px}
-  .count{font-size:19px;padding:4px 10px}
+  .main{min-width:0}
+  .hud{gap:6px;flex-wrap:wrap;justify-content:center}
+  .clock{font-size:38px;min-width:0}
+  .count{font-size:15px;padding:4px 8px;border-width:2px}
+  .hud .btn.small{font-size:14px;padding:6px 10px;margin:0}
   .scene{height:440px}
   .zone{height:112px}
   .zone .zl{font-size:14px;padding:1px 5px;margin:4px 2px}
@@ -219,6 +226,9 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
   .modes button{width:100px;font-size:20px}
   .wheel-wrap{width:260px;height:260px}
   .stamp{width:48px;height:48px;font-size:24px}
+  .cd span.lvl{font-size:52px}
+  .scene.many .item{width:46px;height:46px;margin:-23px 0 0 -23px;font-size:32px}
+  .scene.many .zone .slots{font-size:16px}
 }
 @media (min-width:701px) and (max-height:820px){
   .wheel-wrap{width:240px;height:240px}
@@ -251,28 +261,16 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
     <!-- 첫 화면 -->
     <section class="screen on" id="s-home">
       <h1><span class="hl">쉬는 시간 재밌는</span><br><span class="hl">정리정돈 게임</span></h1>
-      <p class="sub">어질러진 물건을 끌어다 제자리에 쏙! 시간 안에 정리해요.</p>
-      <button class="big" type="button" data-go="game">Play</button>
+      <p class="sub">어질러진 물건을 끌어다 제자리에 쏙!<br>한 번 깰 때마다 더 어려워져요.</p>
+      <button class="big" type="button" id="playBtn">Play</button>
       <div class="home-mini" id="homeMini"></div>
-    </section>
-
-    <!-- 난이도 고르기 -->
-    <section class="screen" id="s-game">
-      <h2>⏱️ 몇 초 안에 정리할까요?</h2>
-      <div class="modes" id="modes">
-        <button type="button" data-sec="60" class="on">🐣 1분<small id="best60">최고 기록 없음</small></button>
-        <button type="button" data-sec="40">🐥 40초<small id="best40">최고 기록 없음</small></button>
-        <button type="button" data-sec="25">🔥 25초<small id="best25">최고 기록 없음</small></button>
-      </div>
-      <p class="sub">책은 📚 책꽂이, 연필은 ✏️ 필통, 쓰레기는 🗑️ 휴지통!</p>
-      <button class="btn" type="button" id="startBtn">시작!</button>
     </section>
 
     <!-- 정리 게임 -->
     <section class="screen" id="s-run">
       <div class="hud">
         <div class="clock" id="clock">1:00</div>
-        <div class="count">🧹 <b id="cnt">0</b> / 9</div>
+        <div class="count"><span id="lvTag">레벨 1</span> 🧹 <b id="cnt">0</b>/<span id="cntMax">6</span></div>
         <button class="btn ghost small" type="button" id="giveUpBtn">그만하기</button>
       </div>
       <div class="bar"><i id="barFill"></i></div>
@@ -294,8 +292,8 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
       <p class="sub" id="resText"></p>
       <div id="resRec"></div>
       <p class="reallife">이제 진짜 내 책상도 정리해 볼까요? 🧹</p>
-      <button class="btn" type="button" id="againBtn">다시 하기</button>
-      <button class="btn ghost" type="button" id="nextBtn">다음 ▶</button>
+      <button class="btn" type="button" id="againBtn">다음 레벨 ▶</button>
+      <button class="btn ghost" type="button" id="nextBtn">처음으로</button>
     </section>
 
     <!-- 행운 뽑기 -->
@@ -332,8 +330,8 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
         </section>
         <section>
           <h3>❓ 놀이 방법</h3>
-          1. <b>Play</b>를 누르고 시간을 골라요.<br>
-          2. 어질러진 물건을 손가락으로 끌어다 제자리에 넣어요.<br>
+          1. <b>Play</b>를 누르고, 어질러진 물건을 손가락으로 끌어다 제자리에 넣어요.<br>
+          2. 시간 안에 다 넣으면 다음 레벨! 물건은 많아지고 시간은 짧아져요.<br>
           3. 날마다 <b>출석체크</b>로 도장과 뱃지를 모으고, <b>행운 뽑기</b>도 돌려 봐요!
         </section>
       </div>
@@ -495,7 +493,6 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
     document.querySelectorAll('.screen').forEach(function(s){ s.classList.toggle('on', s.id === 's-'+name); });
     document.querySelectorAll('.side button[data-go]').forEach(function(b){ b.classList.toggle('on', b.dataset.go === name); });
     if(name === 'home') renderHome();
-    if(name === 'game') renderBest();
     if(name === 'lucky') renderLucky();
     if(name === 'attend') renderAttend();
     if(name === 'menu'){ renderBadges('badgesM'); renderSound(); }
@@ -507,43 +504,41 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
   $('exitBtn').addEventListener('click', function(){ location.href = '../'; });
 
   function renderHome(){
-    var att = attendList().length, best = load('best', {}), b = best['60'];
-    $('homeMini').innerHTML = '<span>📅 출석 ' + att + '번</span><span>🏅 1분 최고 기록 ' + (b ? b + '초' : '없음') + '</span>';
+    var att = attendList().length, lv = load('level', 1), mc = load('maxCleared', 0);
+    $('homeMini').innerHTML = '<span>🎮 지금 레벨 ' + lv + '</span><span>🏅 가장 높이 깬 레벨 ' + (mc ? mc : '없음') + '</span><span>📅 출석 ' + att + '번</span>';
   }
 
   /* ================= 부품 2 타이머 + 끌어다 정리하기 ================= */
-  var ITEMS = [
-    {e:'📕', z:'shelf'}, {e:'📗', z:'shelf'}, {e:'📘', z:'shelf'},
-    {e:'✏️', z:'case'},  {e:'🖍️', z:'case'},  {e:'📏', z:'case'},
-    {e:'🥤', z:'bin'},   {e:'🍬', z:'bin'},   {e:'🍌', z:'bin'}
-  ];
+  // 정리할 물건 (곳마다 6개씩, 레벨이 오르면 더 많이 나와요)
+  var POOL = {
+    shelf: ['📕','📗','📘','📙','📓','📒'],
+    case:  ['✏️','🖍️','📏','✂️','🖊️','📐'],
+    bin:   ['🥤','🍬','🍌','🧃','🍪','🍂']
+  };
+  // 한 번 깰 때마다 더 어렵게: 물건 +3개(최대 18개), 시간 -5초(최소 30초)
+  function levelInfo(n){ return {items: Math.min(6 + 3*(n-1), 18), sec: Math.max(30, 60 - 5*(n-1))}; }
+  function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   var scene = $('scene'), itemsBox = $('items');
-  var total = 60, endAt = 0, tick = null, playing = false, placed = 0, stuckSaid = false,
-      lastProgress = 0, lastSec = -1, lastHalf = -1, lastWrongSay = 0, cdTimer = null;
+  var level = load('level', 1), goal = 6, total = 60, endAt = 0, tick = null, playing = false, placed = 0, stuckSaid = false,
+      lastProgress = 0, lastSec = -1, lastHalf = -1, lastWrongSay = 0, cdTimer = null, lastResult = null;
 
-  document.querySelectorAll('#modes button').forEach(function(b){
-    b.addEventListener('click', function(){
-      total = +b.dataset.sec;
-      document.querySelectorAll('#modes button').forEach(function(x){ x.classList.toggle('on', x === b); });
-      sfx.click();
-    });
-  });
-  function renderBest(){
-    var best = load('best', {});
-    ['60','40','25'].forEach(function(k){ $('best'+k).textContent = best[k] ? '최고 ' + best[k] + '초' : '최고 기록 없음'; });
-  }
   function fmt(sec){ sec = Math.max(0, Math.ceil(sec)); return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0'); }
 
   function layoutItems(){
     itemsBox.innerHTML = '';
     document.querySelectorAll('.zone .slots').forEach(function(s){ s.innerHTML = ''; });
-    var H = scene.clientHeight, top = (160 + 40) / H * 100, bottom = (H - 40) / H * 100;
-    var cells = [];
-    for(var r=0;r<2;r++) for(var c=0;c<5;c++) cells.push([c, r]);
-    cells.sort(function(){ return Math.random() - .5; });
-    ITEMS.slice().sort(function(){ return Math.random() - .5; }).forEach(function(it, i){
-      var cell = cells[i], el = document.createElement('div');
-      var x = 10 + cell[0] * 20 + rnd(-4, 4), y = top + (bottom - top) * (cell[1] === 0 ? rnd(0, .25) : rnd(.75, 1));
+    var per = goal / 3, list = [];
+    ['shelf','case','bin'].forEach(function(z){ shuffle(POOL[z].slice()).slice(0, per).forEach(function(e){ list.push({e:e, z:z}); }); });
+    scene.classList.toggle('many', goal > 12);
+    var H = scene.clientHeight, top = (160 + 36) / H * 100, bottom = (H - 36) / H * 100;
+    var rows = goal <= 9 ? 2 : 3, cols = Math.ceil(goal / rows), cells = [];
+    for(var r=0;r<rows;r++) for(var c=0;c<cols;c++) cells.push([c, r]);
+    shuffle(cells);
+    shuffle(list).forEach(function(it, i){
+      var cell = cells[i], el = document.createElement('div'), cw = 88 / cols;
+      var x = 6 + (cell[0] + .5) * cw + rnd(-cw*.18, cw*.18);
+      var y = top + (bottom - top) * (cell[1] / (rows - 1)) + rnd(-2, 2);
+      y = Math.min(bottom, Math.max(top, y));
       el.className = 'item'; el.textContent = it.e; el.dataset.z = it.z;
       el.style.left = x + '%'; el.style.top = y + '%';
       el.style.setProperty('--r', rnd(-30, 30).toFixed(0) + 'deg');
@@ -554,20 +549,22 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
   }
 
   function startGame(){
+    var info = levelInfo(level);
+    goal = info.items; total = info.sec;
     placed = 0; stuckSaid = false; lastSec = -1; lastHalf = -1;
-    $('cnt').textContent = '0';
+    $('cnt').textContent = '0'; $('cntMax').textContent = goal; $('lvTag').textContent = '레벨 ' + level;
     $('clock').textContent = fmt(total); $('clock').className = 'clock';
     $('barFill').style.width = '100%'; $('barFill').style.backgroundColor = '';
     scene.classList.remove('danger');
     show('run');
     layoutItems();
-    // 3, 2, 1, 시작!
-    var cd = $('cd'), seq = ['3','2','1','시작!'], k = 0;
+    // 레벨 ○, 3, 2, 1, 시작!
+    var cd = $('cd'), seq = ['레벨 ' + level, '3','2','1','시작!'], k = 0;
     cd.classList.add('on');
     (function step(){
-      cd.innerHTML = '<span>' + seq[k] + '</span>';
-      sfx.count(k === 3);
-      if(k === 0) say('키키키~ 준비됐어? 끌어다 제자리에 쏙!', 'cheer');
+      cd.innerHTML = '<span' + (k === 0 ? ' class="lvl"' : '') + '>' + seq[k] + '</span>';
+      if(k === 0) sfx.star(1); else sfx.count(k === 4);
+      if(k === 0) say('키키키~ 레벨 ' + level + '! 물건 ' + goal + '개, ' + total + '초 안에!', 'cheer');
       k++;
       if(k < seq.length){ cdTimer = setTimeout(step, 650); }
       else { cdTimer = setTimeout(function(){ cd.classList.remove('on'); begin(); }, 500); }
@@ -597,7 +594,7 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
     if(l > 5 && s !== lastSec){ lastSec = s; sfx.tick(ratio <= .25); }
     if(l <= 5 && l > 0 && h !== lastHalf){ lastHalf = h; sfx.tick(true); }
     // 막혔을 때: 시간이 40% 남았거나 10초 동안 하나도 못 넣었으면
-    if(!stuckSaid && placed < ITEMS.length && (ratio <= .4 || Date.now() - lastProgress > 10000)){
+    if(!stuckSaid && placed < goal && (ratio <= .4 || Date.now() - lastProgress > 10000)){
       stuckSaid = true; say(LINES.stuck, 'cheer'); hint();
     }
     if(l <= 0) finish(false);
@@ -680,7 +677,7 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
       z.classList.remove('flash'); void z.offsetWidth; z.classList.add('flash');
       sparkle(cx, cy);
       var c = $('cnt'); c.textContent = placed; c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump');
-      if(placed === ITEMS.length) finish(true);
+      if(placed === goal) finish(true);
       else if(placed % 3 === 0) say(LINES.good, 'happy');
     }, 180);
   }
@@ -708,22 +705,27 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
     if(!playing) return;
     var l = Math.max(0, left()), used = Math.round(total - l);
     endRun();
-    var starsN = 0, rec = '';
+    var starsN = 0, rec = '', cleared = level;
     if(ok){
       starsN = l/total >= .5 ? 3 : l/total >= .2 ? 2 : 1;
-      var best = load('best', {}), k = String(total);
-      if(!best[k] || used < best[k]){ rec = '<span class="newrec">🏅 ' + (best[k] ? '새 기록! ' : '첫 기록! ') + used + '초</span>'; best[k] = used; save('best', best); }
-      else rec = '<span class="sub">🏅 최고 기록 ' + best[k] + '초</span>';
-      $('resTitle').textContent = '🎉 정리 끝!';
-      $('resText').textContent = used + '초 만에 9개를 다 정리했어요!';
+      var mc = load('maxCleared', 0);
+      level = cleared + 1; save('level', level);
+      var nx = levelInfo(level);
+      if(cleared > mc){ save('maxCleared', cleared); rec = '<span class="newrec">🏅 레벨 ' + cleared + ' 처음 깼어요!</span>'; }
+      rec += '<p class="sub">다음은 <b>레벨 ' + level + '</b>: 물건 ' + nx.items + '개 · ' + nx.sec + '초</p>';
+      $('resTitle').textContent = '🎉 레벨 ' + cleared + ' 클리어!';
+      $('resText').textContent = used + '초 만에 ' + goal + '개를 다 정리했어요!';
+      $('againBtn').textContent = '다음 레벨 ▶';
       sfx.tada(); confetti();
       say(LINES.good, 'happy');
     }else{
       $('resTitle').textContent = '⏰ 시간 끝!';
-      $('resText').textContent = '아쉬워요. 9개 중에 ' + placed + '개를 정리했어요.';
+      $('resText').textContent = '아쉬워요. ' + goal + '개 중에 ' + placed + '개를 정리했어요.';
+      $('againBtn').textContent = '레벨 ' + level + ' 다시 도전';
       sfx.fail();
       say(LINES.wrong, 'sad');
     }
+    lastResult = ok;
     $('resRec').innerHTML = rec;
     setTimeout(function(){
       show('result');
@@ -734,10 +736,16 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
       }
     }, ok ? 450 : 200);
   }
-  $('startBtn').addEventListener('click', function(){ sfx.click(); startGame(); });
-  $('againBtn').addEventListener('click', function(){ sfx.click(); startGame(); });
+  $('playBtn').addEventListener('click', function(){ sfx.click(); startGame(); });
+  $('againBtn').addEventListener('click', function(){
+    var b = this; sfx.click();
+    if(!lastResult){ startGame(); return; }
+    // 끝났을 때: 다음 레벨로 넘어가면서
+    b.disabled = true; say(LINES.end, 'happy');
+    setTimeout(function(){ b.disabled = false; startGame(); }, 1100);
+  });
   $('giveUpBtn').addEventListener('click', function(){ sfx.click(); show('home'); say(LINES.wrong, 'sad'); });
-  $('nextBtn').addEventListener('click', function(){ sfx.click(); show('home'); say(LINES.end, 'happy'); });
+  $('nextBtn').addEventListener('click', function(){ sfx.click(); show('home'); say('키키키~ 또 정리하러 와!', 'happy'); });
 
   function confetti(){
     var box = document.createElement('div'); box.className = 'confetti';
@@ -756,7 +764,7 @@ body.playing .bubble{font-size:19px;margin-bottom:50px}
   /* ================= 부품 3 뽑기: 매일 바뀌는 행운 돌림판 ================= */
   var LUCKY = [
     {e:'🧹', t:'오늘의 행운: 책상 위 정리 왕!'},
-    {e:'⏱️', t:'오늘은 25초에 도전해 봐!'},
+    {e:'⏱️', t:'오늘은 레벨 하나 더 올려 봐!'},
     {e:'💙', t:'오늘의 행운 색: 파랑'},
     {e:'✏️', t:'연필을 필통에 쏙! 행운이 와요'},
     {e:'📚', t:'책을 키 순서로 세우면 행운 두 배'},

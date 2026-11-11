@@ -64,7 +64,22 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
 .opts button{min-width:54px;height:54px;border-radius:14px;border:3px solid #cdbfa8;background:#fff;font-size:24px;transition:transform .1s}
 .opts button:active{transform:scale(.9)}
 .opts button.sel{border-color:var(--ink);box-shadow:0 0 0 4px var(--gold);transform:scale(1.08)}
-.opts .sw{width:54px}
+.opts .sw{width:54px;font-size:20px}
+.opts button.txt{font-size:17px;padding:0 10px}
+.who .pv svg{overflow:visible}
+/* 혼자 하기 버튼 */
+.solo{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:12px;padding:14px;border-radius:18px;border:4px solid var(--ink);background:#d9f2ff;font-size:clamp(22px,3.4vw,28px);box-shadow:0 6px 0 var(--ink)}
+.solo:active{transform:translateY(5px);box-shadow:0 1px 0 var(--ink)}
+.solo small{font-size:17px;color:var(--sub)}
+.twoBox{padding:14px;margin:12px 0}
+.twoBox .ct{font-size:26px;text-align:center;margin-bottom:8px}
+.twoBox .big{margin:10px 0 0}
+.names{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.names label{display:flex;flex-direction:column;gap:4px;font-size:19px;min-width:0}
+.names input{font:inherit;font-size:24px;padding:10px 12px;width:100%;border:4px solid currentColor;border-radius:14px;color:var(--ink);background:#fff;min-width:0;-webkit-user-select:text;user-select:text}
+.names input:focus{outline:none;box-shadow:0 0 0 4px #ffe27a}
+.cpuBox.glow{animation:glow 1s ease-in-out 2}
+@keyframes glow{50%{box-shadow:0 0 0 8px #ffe27a}}
 
 /* 설명 */
 .rules{padding:18px 22px;font-size:23px;line-height:1.7}
@@ -230,6 +245,8 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
   #mascot .ms{width:92px;height:86px}
   .bubble{font-size:21px;margin-bottom:50px}
   .chip{font-size:16px;padding:8px 10px}
+  .lv button{font-size:19px;padding:10px 4px;word-break:keep-all}
+  .lv button small{font-size:13px}
   .arena{min-height:190px;padding-top:26px}
   .fig .inner svg{max-height:150px}
   .score .num{font-size:32px}
@@ -265,6 +282,7 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
       <button type="button" class="help" data-go="pHelp">설명<br>듣기</button>
       <button type="button" class="split" data-go="pMode"><span>친구들과 하기</span><span>방 코드 만들기</span></button>
     </div>
+    <button type="button" class="solo" id="soloBtn">🤖 혼자 하기 <small>컴퓨터와 대결!</small></button>
   </section>
 
   <!-- 캐릭터 꾸미기 -->
@@ -294,7 +312,14 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
   <!-- 누구와 할까 -->
   <section class="panel" id="pMode">
     <h2>누구와 할까요?</h2>
-    <button class="big yellow" type="button" id="startTwo">👫 한 기기에서 둘이 하기<small>누른 쪽은 공개할 때까지 비밀!</small></button>
+    <div class="box twoBox">
+      <div class="ct">👫 한 기기에서 둘이 하기</div>
+      <div class="names">
+        <label style="color:var(--p1)">1P 이름<input id="name0" maxlength="6" placeholder="1P" autocomplete="off"></label>
+        <label style="color:var(--p2)">2P 이름<input id="name1" maxlength="6" placeholder="2P" autocomplete="off"></label>
+      </div>
+      <button class="big yellow" type="button" id="startTwo">시작! 🔨<small>누른 쪽은 공개할 때까지 비밀!</small></button>
+    </div>
     <div class="box cpuBox">
       <div class="ct">🤖 컴퓨터와 하기</div>
       <div class="lv">
@@ -310,7 +335,7 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
   <!-- 게임 -->
   <section class="panel" id="pGame">
     <div class="box score">
-      <div class="side"><div class="nm" style="color:var(--p1)">1P</div><div><span class="num" id="s0">0</span></div><div class="dots" id="d0"></div></div>
+      <div class="side"><div class="nm" style="color:var(--p1)" id="n0">1P</div><div><span class="num" id="s0">0</span></div><div class="dots" id="d0"></div></div>
       <div class="goal">10점 먼저!<b id="lvTag"></b></div>
       <div class="side r"><div class="nm" style="color:var(--p2)" id="n1">2P</div><div><span class="num" id="s1">0</span></div><div class="dots" id="d1"></div></div>
     </div>
@@ -403,18 +428,36 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
 
   /* ---------- 기억해 주기 (이 기기 안에 저장) ---------- */
   var KEY = "chamchamcham.v1";
-  var COLORS = ["#2f7de1","#f08a24","#2e9d58","#9c4dcc","#e91e63","#795548"];
-  var HATS = [["none","없음"],["cloud","☁️"],["cat","🐱"],["crown","👑"]];
-  var data = { looks:[{color:COLORS[0],hat:"none"},{color:COLORS[1],hat:"cloud"}], muted:false, stats:{} };
+  var COLORS = ["#2f7de1","#f08a24","#2e9d58","#9c4dcc","#e91e63","#795548","#fbc02d","#26c6da","#424242","#ff8a80"];
+  var HATS = [["none","없음"],["cloud","☁️"],["cat","🐱"],["crown","👑"],["bunny","🐰"],["bow","🎀"],["cap","🧢"],["flower","🌸"]];
+  var ACCS = [["none","없음"],["glasses","👓"],["sun","🕶️"],["mus","콧수염"],["heart","💗"]];
+  // 뿅망치 색: [몸통, 아랫줄, 왼쪽 끝, 오른쪽 끝, 반짝이]
+  var HAMMERS = {
+    red:["#e53935","#c62828","#b71c1c","#ef5350","#ff9e9a"],
+    blue:["#1e88e5","#1565c0","#0d47a1","#64b5f6","#bbdefb"],
+    green:["#43a047","#2e7d32","#1b5e20","#81c784","#c8e6c9"],
+    purple:["#8e24aa","#6a1b9a","#4a148c","#ba68c8","#e1bee7"],
+    yellow:["#fdd835","#f9a825","#f57f17","#fff176","#fffde7"]
+  };
+  var DEFAULT_LOOK = {color:COLORS[0],hat:"none",acc:"none",hm:"red"};
+  var data = { looks:[{color:COLORS[0],hat:"none",acc:"none",hm:"red"},{color:COLORS[1],hat:"cloud",acc:"none",hm:"red"}], muted:false, stats:{}, names:["",""] };
   try{
     var saved = JSON.parse(localStorage.getItem(KEY));
     if(saved){
-      if(saved.looks && saved.looks.length === 2) data.looks = saved.looks;
+      if(saved.looks && saved.looks.length === 2){
+        data.looks = saved.looks.map(function(l){
+          var o = {}; for(var k in DEFAULT_LOOK) o[k] = (l && l[k] !== undefined) ? l[k] : DEFAULT_LOOK[k];
+          if(!HAMMERS[o.hm]) o.hm = "red";
+          return o;
+        });
+      }
       data.muted = !!saved.muted;
+      if(saved.names && saved.names.length === 2) data.names = saved.names.map(function(n){ return String(n || "").slice(0,6); });
       if(saved.stats) data.stats = saved.stats;
     }
   }catch(e){}
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} }
+  function nm(p){ return data.names[p] || (p ? "2P" : "1P"); }
   var looks = data.looks;
 
   /* ---------- 소리 (파일 없이 브라우저에서 직접 만듦) ---------- */
@@ -489,10 +532,11 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
     if(hammer){
       s += '<g class="hm"><path d="M90 100 L116 62" '+K+' stroke-width="6" stroke-linecap="round"/>';
       s += '<line x1="116" y1="62" x2="126" y2="24" stroke="#8d6e63" stroke-width="7" stroke-linecap="round"/>';
-      s += '<g transform="rotate(15 128 20)"><rect x="100" y="2" width="56" height="32" rx="9" fill="#e53935" '+K+' stroke-width="4"/>';
-      s += '<rect x="100" y="22" width="56" height="12" rx="6" fill="#c62828"/>';
-      s += '<ellipse cx="100" cy="18" rx="6" ry="16" fill="#b71c1c" '+K+' stroke-width="4"/><ellipse cx="156" cy="18" rx="6" ry="16" fill="#ef5350" '+K+' stroke-width="4"/>';
-      s += '<path d="M110 9 h26" stroke="#ff9e9a" stroke-width="4" stroke-linecap="round"/></g></g>';
+      var H = HAMMERS[look.hm] || HAMMERS.red;
+      s += '<g transform="rotate(15 128 20)"><rect x="100" y="2" width="56" height="32" rx="9" fill="'+H[0]+'" '+K+' stroke-width="4"/>';
+      s += '<rect x="100" y="22" width="56" height="12" rx="6" fill="'+H[1]+'"/>';
+      s += '<ellipse cx="100" cy="18" rx="6" ry="16" fill="'+H[2]+'" '+K+' stroke-width="4"/><ellipse cx="156" cy="18" rx="6" ry="16" fill="'+H[3]+'" '+K+' stroke-width="4"/>';
+      s += '<path d="M110 9 h26" stroke="'+H[4]+'" stroke-width="4" stroke-linecap="round"/></g></g>';
     }else{
       s += '<path d="M90 104 L110 124" '+K+' stroke-width="6" stroke-linecap="round"/>';
     }
@@ -505,6 +549,19 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
     s += '<g class="f-sad"><path d="M64 56 l10 5 M96 56 l-10 5" '+K+' stroke-width="3.5" stroke-linecap="round"/>';
     s += '<path d="M68 80 q12 -10 24 0" '+K+' stroke-width="3.5" fill="none" stroke-linecap="round"/></g>';
     s += '<g class="f-wow"><circle cx="70" cy="60" r="4.5" fill="#2b1d14"/><circle cx="90" cy="60" r="4.5" fill="#2b1d14"/><ellipse cx="80" cy="76" rx="6" ry="7.5" fill="#2b1d14"/></g>';
+    // 얼굴 꾸미기
+    if(look.acc === "glasses"){
+      s += '<circle cx="70" cy="60" r="8" fill="#fff" fill-opacity=".25" '+K+' stroke-width="3"/><circle cx="90" cy="60" r="8" fill="#fff" fill-opacity=".25" '+K+' stroke-width="3"/>';
+      s += '<path d="M78 60 h4 M62 59 l-10 -3 M98 59 l10 -3" '+K+' stroke-width="3" stroke-linecap="round"/>';
+    }else if(look.acc === "sun"){
+      s += '<rect x="60" y="54" width="18" height="12" rx="5" fill="#1d1d1d" '+K+' stroke-width="3"/><rect x="82" y="54" width="18" height="12" rx="5" fill="#1d1d1d" '+K+' stroke-width="3"/>';
+      s += '<path d="M78 58 h4 M60 57 l-8 -3 M100 57 l8 -3" '+K+' stroke-width="3" stroke-linecap="round"/>';
+      s += '<path d="M64 57 l4 0 M86 57 l4 0" stroke="#fff" stroke-width="2" stroke-linecap="round"/>';
+    }else if(look.acc === "mus"){
+      s += '<path d="M80 68 q-6 -5 -12 -1 q-5 3 -9 0 q3 7 10 6 q7 -1 11 -5 q4 4 11 5 q7 1 10 -6 q-4 3 -9 0 q-6 -4 -12 1 z" fill="#3e2723"/>';
+    }else if(look.acc === "heart"){
+      s += '<path d="M64 68 c-3 -4 -8 0 -4 4 l4 4 l4 -4 c4 -4 -1 -8 -4 -4 z M96 68 c-3 -4 -8 0 -4 4 l4 4 l4 -4 c4 -4 -1 -8 -4 -4 z" fill="#ff4f8b"/>';
+    }
     // 모자
     if(look.hat === "cloud"){
       s += '<path d="M56 40 q-7 -16 12 -16 q6 -13 21 -4 q17 -6 18 12 q9 6 0 12 z" fill="#fff" '+K+' stroke-width="4"/>';
@@ -515,6 +572,20 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
     }else if(look.hat === "crown"){
       s += '<path d="M60 38 L58 16 L70 28 L80 12 L90 28 L102 16 L100 38 Z" fill="#ffc107" '+K+' stroke-width="4" stroke-linejoin="round"/>';
       s += '<circle cx="80" cy="30" r="3.5" fill="#e53935"/>';
+    }else if(look.hat === "bunny"){
+      s += '<ellipse cx="68" cy="20" rx="7" ry="19" fill="#fff" '+K+' stroke-width="4"/><ellipse cx="92" cy="20" rx="7" ry="19" fill="#fff" '+K+' stroke-width="4"/>';
+      s += '<ellipse cx="68" cy="22" rx="3" ry="12" fill="#ffb3c7"/><ellipse cx="92" cy="22" rx="3" ry="12" fill="#ffb3c7"/>';
+    }else if(look.hat === "bow"){
+      s += '<path d="M98 38 L84 28 L86 46 Z M98 38 L112 28 L110 46 Z" fill="#ff4f8b" '+K+' stroke-width="3.5" stroke-linejoin="round"/>';
+      s += '<circle cx="98" cy="38" r="5" fill="#ff86b0" '+K+' stroke-width="3"/>';
+    }else if(look.hat === "cap"){
+      s += '<path d="M52 50 q28 -40 56 0 z" fill="'+c+'" '+K+' stroke-width="4" stroke-linejoin="round"/>';
+      s += '<path d="M104 48 q18 -1 24 6 q-14 3 -26 0 z" fill="'+c+'" '+K+' stroke-width="4" stroke-linejoin="round"/>';
+      s += '<circle cx="80" cy="30" r="3" fill="#2b1d14"/>';
+    }else if(look.hat === "flower"){
+      s += '<g transform="translate(100,36)">';
+      for(var a=0;a<5;a++){ var rr = a*72*Math.PI/180; s += '<circle cx="'+(Math.cos(rr)*7).toFixed(1)+'" cy="'+(Math.sin(rr)*7).toFixed(1)+'" r="6" fill="#ff8fc1" '+K+' stroke-width="2.5"/>'; }
+      s += '<circle r="4.5" fill="#ffd54f" '+K+' stroke-width="2.5"/></g>';
     }
     return s;
   }
@@ -573,11 +644,15 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
     [0,1].forEach(function(p){
       var d = document.createElement("div");
       d.className = "box who";
-      var html = '<h3 style="color:'+(p?"var(--p2)":"var(--p1)")+'">'+(p?"2P":"1P")+'</h3><div class="pv">'+charSVG(looks[p], false, false)+'</div>';
+      var html = '<h3 style="color:'+(p?"var(--p2)":"var(--p1)")+'">'+esc(nm(p))+'</h3><div class="pv">'+charSVG(looks[p], true, false)+'</div>';
       html += '<div class="opts"><div class="lb">몸 색</div>';
       COLORS.forEach(function(c){ html += '<button type="button" class="sw'+(looks[p].color===c?" sel":"")+'" style="background:'+c+'" data-p="'+p+'" data-color="'+c+'" aria-label="몸 색"></button>'; });
       html += '</div><div class="opts"><div class="lb">모자</div>';
       HATS.forEach(function(h){ html += '<button type="button" class="'+(looks[p].hat===h[0]?"sel":"")+'" data-p="'+p+'" data-hat="'+h[0]+'">'+h[1]+'</button>'; });
+      html += '</div><div class="opts"><div class="lb">얼굴 꾸미기</div>';
+      ACCS.forEach(function(a){ html += '<button type="button" class="'+(looks[p].acc===a[0]?"sel":"")+(a[1].length>2?" txt":"")+'" data-p="'+p+'" data-acc="'+a[0]+'">'+a[1]+'</button>'; });
+      html += '</div><div class="opts"><div class="lb">뿅망치 색</div>';
+      Object.keys(HAMMERS).forEach(function(k){ html += '<button type="button" class="sw'+(looks[p].hm===k?" sel":"")+'" style="background:'+HAMMERS[k][0]+'" data-p="'+p+'" data-hm="'+k+'" aria-label="뿅망치 색">🔨</button>'; });
       html += '</div>';
       d.innerHTML = html;
       row.appendChild(d);
@@ -588,6 +663,8 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
     var p = +t.getAttribute("data-p");
     if(t.hasAttribute("data-color")) looks[p].color = t.getAttribute("data-color");
     if(t.hasAttribute("data-hat")) looks[p].hat = t.getAttribute("data-hat");
+    if(t.hasAttribute("data-acc")) looks[p].acc = t.getAttribute("data-acc");
+    if(t.hasAttribute("data-hm")) looks[p].hm = t.getAttribute("data-hm");
     save(); sfx("point"); drawCustom();
   });
 
@@ -634,7 +711,8 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
     stopGame();
     G = { mode:mode, lv:lv||null, score:[0,0], attacker:0, choice:[null,null], phase:"off",
           hist:{ atk:{up:0,down:0,left:0,right:0}, def:{up:0,down:0,left:0,right:0} } };
-    $("n1").textContent = mode === "cpu" ? "컴퓨터" : "2P";
+    $("n0").textContent = nm(0);
+    $("n1").textContent = mode === "cpu" ? "컴퓨터" : nm(1);
     $("lvTag").textContent = mode === "cpu" ? LV_NAME[lv] : "👫 둘이 하기";
     $("k1").style.display = mode === "cpu" ? "none" : "";
     go("pGame");
@@ -642,6 +720,17 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
     nextRound(true);
   }
   $("startTwo").addEventListener("click", function(){ sfx("tap"); startGame("two"); });
+  // 1P·2P 이름 정하기 (이 기기에만 저장)
+  [0,1].forEach(function(p){
+    var inp = $("name"+p);
+    inp.value = data.names[p];
+    inp.addEventListener("input", function(){ data.names[p] = inp.value.trim().slice(0,6); save(); });
+  });
+  $("soloBtn").addEventListener("click", function(){
+    sfx("tap"); go("pMode");
+    var cb = document.querySelector(".cpuBox"); restart(cb, "glow");
+    cb.scrollIntoView({block:"center"});
+  });
   document.querySelectorAll("[data-lv]").forEach(function(b){
     b.addEventListener("click", function(){ sfx("tap"); startGame("cpu", b.getAttribute("data-lv")); });
   });
@@ -657,7 +746,7 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
     }
   }
 
-  function playerName(p){ return p===0 ? "1P" : (G.mode==="cpu" ? "컴퓨터" : "2P"); }
+  function playerName(p){ return p===0 ? nm(0) : (G.mode==="cpu" ? "컴퓨터" : nm(1)); }
 
   function drawFigs(){
     for(var p=0;p<2;p++){
@@ -668,7 +757,7 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
       $("c"+p).className = "inner";
       $("fig"+p).classList.toggle("atk", atk);
       $("t"+p).textContent = atk ? "🔨 공격" : "🏃 피하기";
-      $("r"+p).innerHTML = playerName(p) + " · " + (atk ? "🔨 공격<small>망치를 어디로 내려칠까?</small>" : "🏃 피하기<small>어디로 피할까?</small>");
+      $("r"+p).innerHTML = esc(playerName(p)) + " · " + (atk ? "🔨 공격<small>망치를 어디로 내려칠까?</small>" : "🏃 피하기<small>어디로 피할까?</small>");
       $("a"+p).classList.remove("show");
       $("st"+p).classList.remove("on");
       $("w"+p).classList.remove("on");
@@ -863,8 +952,8 @@ h2{font-size:34px;margin:4px 0 14px;text-align:center;font-weight:400}
     var margin = Math.abs(me - you);
     var lost = (G.mode === "cpu" && w === 1);
     var stars = lost ? 1 : (margin >= 6 ? 3 : 2);
-    $("winText").textContent = (w===0 ? "1P" : playerName(1)) + " 승리!";
-    $("finalScore").textContent = "1P " + me + " : " + you + " " + playerName(1);
+    $("winText").textContent = playerName(w) + " 승리!";
+    $("finalScore").textContent = playerName(0) + " " + me + " : " + you + " " + playerName(1);
     var rec = "";
     if(G.mode === "cpu"){
       var s = stat(G.lv);
